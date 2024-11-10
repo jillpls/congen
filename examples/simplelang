@@ -1,0 +1,13 @@
+--categories
+C=ptkbdgmn
+V=aiueo
+W=wvy
+R=rl
+--syllables
+M=CV
+M=[CR]V
+M=[{C(W)}W]V
+E=WV(((m)))
+E=C(W)V(((m)))
+--words
+MM3E
