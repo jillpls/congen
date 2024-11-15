@@ -1,9 +1,9 @@
 use crate::app::SubApp;
 use crate::app::{extract_sound_by_representation, SharedData};
+use crate::sounds::{parse_consonants, Place, Sound, SoundKind};
 use crate::sounds::{
     parse_vowels, partial_cmp_manners, Backness, Height, Manners, Roundedness, Voice,
 };
-use crate::sounds::{parse_consonants, Place, Sound, SoundKind};
 use eframe::emath::Vec2;
 use egui::ScrollArea;
 use egui::{Context, Ui};

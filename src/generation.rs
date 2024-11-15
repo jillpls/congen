@@ -1,12 +1,12 @@
 // TODO: Generate Syllables as Onset Nucleus Coda
 
-use std::cmp::Ordering;
 use crate::app::Categories;
 use crate::sounds::Sound;
 use crate::{ConGenError, ConGenResult};
 use rand::prelude::SliceRandom;
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
+use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Display, Formatter};
 
@@ -34,7 +34,6 @@ impl PartialOrd for Syllable {
         self.sounds.partial_cmp(&other.sounds)
     }
 }
-
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord)]
 pub struct Word {

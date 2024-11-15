@@ -1,4 +1,5 @@
 use crate::app::ipa::IpaApp;
+use crate::app::sound_change::SoundChangeApp;
 use crate::app::word_gen::WordGenApp;
 use crate::sounds::Sound;
 use eframe::epaint::FontFamily;
@@ -9,7 +10,6 @@ use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use strum::{EnumIter, IntoEnumIterator};
 use uuid::Uuid;
-use crate::app::sound_change::SoundChangeApp;
 
 mod header;
 mod ipa;
@@ -37,12 +37,7 @@ pub struct SharedData {
 }
 
 pub trait SubApp {
-    fn update(
-        &mut self,
-        ctx: &egui::Context,
-        _: &mut eframe::Frame,
-        _: &mut SharedData,
-    ) {
+    fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame, _: &mut SharedData) {
         CentralPanel::default().show(ctx, |ui| ui.label("Not implemented."));
     }
 }
@@ -71,7 +66,6 @@ impl Default for WrapperApp {
 }
 
 impl WrapperApp {
-
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         let mut fonts = FontDefinitions::default();
         fonts.font_data.insert(
@@ -141,7 +135,11 @@ impl App for WrapperApp {
                 powered_by_egui_and_eframe(ui);
                 ui.horizontal(|ui| {
                     ui.label("Found a bug or have any suggestions? email me:");
-                ui.hyperlink_to("dev@jillplease.de", "mailto:dev@jillplease.de?subject=ConGen") });
+                    ui.hyperlink_to(
+                        "dev@jillplease.de",
+                        "mailto:dev@jillplease.de?subject=ConGen",
+                    )
+                });
                 ui.horizontal(|ui| {
                     ui.label("Source:");
                     ui.hyperlink_to("github", "https://github.com/jillpls/congen");
@@ -151,7 +149,9 @@ impl App for WrapperApp {
                         .small()
                         .color(ui.visuals().warn_fg_color),
                 )
-                    .on_hover_text("Some functionalities are still work in progress and might not do anything");
+                .on_hover_text(
+                    "Some functionalities are still work in progress and might not do anything",
+                );
                 egui::warn_if_debug_build(ui);
             });
         });
@@ -167,10 +167,10 @@ impl App for WrapperApp {
                     self.word_gen_app.update(ctx, frame, &mut self.shared_data);
                 }
                 TabId::SoundChange => {
-                    self.sound_change_app.update(ctx, frame, &mut self.shared_data);
+                    self.sound_change_app
+                        .update(ctx, frame, &mut self.shared_data);
                 }
             };
-
         });
     }
 }

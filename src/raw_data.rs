@@ -189,9 +189,8 @@ h,glottal,voiceless,non-sibilant fricative,0
 ʔ̞,glottal,voiced,approximant,10";
 }
 
-
 pub mod american_english {
-    pub const CATEGORIES : &str = "\
+    pub const CATEGORIES: &str = "\
 C=mnpbtdkgfvθðszʃʒhwlrj
 D=mnpbtdkgfvθðszʃʒrl
 V=æ;ɑ;ɔ;ɪ;ɛ;ʌ;ʊ;eɪ;oʊ;aɪ;ɔɪ;aʊ
@@ -214,7 +213,7 @@ N=mn
     /// D
     /// l[P{tʃ}{dʒ}
     ///
-    pub const SYLLABLES : &str = "\
+    pub const SYLLABLES: &str = "\
         [C{P[RF]}{s[mnfθ]}{sT(A)}{sNA}]V
     ";
     pub const VOWELS: &str = "V=æ ɑ ɔ ɪ ɛ ʌ ʊ eɪ oʊ aɪ ɔɪ aʊ";

@@ -17,7 +17,7 @@ pub struct WordGenSettings {
     word_display: WordDisplaySettings,
     sorting: Sorting,
     amount: usize,
-    variance: f32
+    variance: f32,
 }
 
 impl Default for WordGenSettings {
@@ -159,7 +159,11 @@ fn category_from_str(
             .map(|v| v.to_string())
             .collect::<Vec<_>>()
     } else {
-        content.chars().filter(|c| !c.is_whitespace()).map(|c| c.to_string()).collect()
+        content
+            .chars()
+            .filter(|c| !c.is_whitespace())
+            .map(|c| c.to_string())
+            .collect()
     };
 
     let result = symbols
@@ -309,7 +313,7 @@ impl SubApp for WordGenApp {
                             output.reverse();
                         }
                         Sorting::SyllableCount => {
-                            output.sort_by(|a,b| a.syllables.len().cmp(&b.syllables.len()))
+                            output.sort_by(|a, b| a.syllables.len().cmp(&b.syllables.len()))
                         }
                         Sorting::SoundCount => {
                             fn count_sounds(word: &Word) -> usize {
@@ -337,7 +341,11 @@ impl SubApp for WordGenApp {
                                 Sorting::AlphabeticRev,
                                 "reverse alphabetic",
                             );
-                            ui.selectable_value(&mut self.settings.sorting, Sorting::SyllableCount, "length");
+                            ui.selectable_value(
+                                &mut self.settings.sorting,
+                                Sorting::SyllableCount,
+                                "length",
+                            );
                             ui.selectable_value(
                                 &mut self.settings.sorting,
                                 Sorting::SoundCount,
