@@ -17,6 +17,8 @@ pub enum ConGenError {
     Todo,
 }
 
+pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub type ConGenResult<T> = Result<T, ConGenError>;
 
 impl std::fmt::Display for ConGenError {

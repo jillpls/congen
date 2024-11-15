@@ -117,6 +117,18 @@ impl WrapperApp {
                         self.tab = tab
                     }
                 }
+                ui.separator();
+                ui.label(format!("version: {}", crate::APP_VERSION));
+                if crate::APP_VERSION.starts_with('0') {
+                    ui.separator();
+                    ui.label(
+                        egui::RichText::new("⚠ Beta Version ⚠")
+                            .color(ui.visuals().warn_fg_color),
+                    )
+                        .on_hover_text(
+                            "Some functionalities are still work in progress and might not do anything",
+                        );
+                }
             });
         });
     }
@@ -144,14 +156,6 @@ impl App for WrapperApp {
                     ui.label("Source:");
                     ui.hyperlink_to("github", "https://github.com/jillpls/congen");
                 });
-                ui.label(
-                    egui::RichText::new("⚠ Work in Progess ⚠")
-                        .small()
-                        .color(ui.visuals().warn_fg_color),
-                )
-                .on_hover_text(
-                    "Some functionalities are still work in progress and might not do anything",
-                );
                 egui::warn_if_debug_build(ui);
             });
         });

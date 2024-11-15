@@ -53,6 +53,7 @@ pub struct ConsonantLookups {
     places: Vec<Place>,
     by_manners: HashMap<Manners, HashMap<Place, Vec<Uuid>>>,
     sorted_manners: Vec<Manners>,
+    empty_rows: HashMap<Manners, bool>
 }
 
 #[derive(Default)]
@@ -60,6 +61,7 @@ pub struct VowelLookups {
     backness: Vec<Backness>,
     by_height: HashMap<Height, HashMap<Backness, Vec<Uuid>>>,
     sorted_height: Vec<Height>,
+    empty_rows: HashMap<Height, bool>
 }
 
 #[derive(Default)]
@@ -185,6 +187,7 @@ impl IpaApp {
             places,
             by_manners,
             sorted_manners,
+            empty_rows: Default::default(),
         }
     }
 
@@ -218,6 +221,7 @@ impl IpaApp {
             backness,
             by_height,
             sorted_height,
+            empty_rows: Default::default(),
         }
     }
 
@@ -233,6 +237,7 @@ impl IpaApp {
         shared_data.sounds = result.sounds.clone();
         shared_data.sound_by_representation = extract_sound_by_representation(&shared_data.sounds);
         result.update_categories(shared_data);
+        result.update_empty_rows();
         result
     }
 }
@@ -400,37 +405,42 @@ impl IpaApp {
         selected_sounds: &mut SelectedSounds,
         sounds: &HashMap<Uuid, Sound>,
         rows: &Vec<R>,
+        empty_rows: &HashMap<R, bool>,
         cols: &[C],
         name: &str,
         settings: &mut IpaAppSettings,
     ) {
         Self::display_sound_table_header(ui, settings, name);
-        ui.push_id(name, |ui| {
-            let mut table = TableBuilder::new(ui)
-                .id_salt(name)
-                .striped(true)
-                .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-                .columns(Column::auto(), cols.len() + 1);
-            table
-                .header(20.0, |mut header| {
-                    Self::build_header(&mut header, &cols);
-                })
-                .body(|mut body| {
-                    for n in rows {
-                        body.row(20., |mut row| {
-                            Self::display_sound_row(
-                                &lookup,
-                                selected_sounds,
-                                sounds,
-                                &mut row,
-                                &cols,
-                                n,
-                                settings,
-                                name,
-                            )
-                        });
-                    }
-                });
+            ui.push_id(name, |ui| {
+                ScrollArea::both().show(ui, |ui| {
+                let mut table = TableBuilder::new(ui)
+                    .id_salt(name)
+                    .striped(true)
+                    .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+                    .columns(Column::auto(), cols.len() + 1);
+                table
+                    .header(20.0, |mut header| {
+                        Self::build_header(&mut header, &cols);
+                    })
+                    .body(|mut body| {
+                        for n in rows {
+                            if !settings.hide_unselected.contains(name) || !empty_rows.get(n).copied().unwrap_or(true) {
+                                body.row(20., |mut row| {
+                                    Self::display_sound_row(
+                                        &lookup,
+                                        selected_sounds,
+                                        sounds,
+                                        &mut row,
+                                        &cols,
+                                        n,
+                                        settings,
+                                        name,
+                                    )
+                                });
+                            }
+                        }
+                    });
+            });
         });
     }
 
@@ -462,6 +472,7 @@ impl IpaApp {
             &mut self.selected,
             &self.sounds,
             &self.consonant_lookups.sorted_manners,
+            &self.consonant_lookups.empty_rows,
             &cols,
             "consonants",
             &mut self.settings,
@@ -475,6 +486,7 @@ impl IpaApp {
             &mut self.selected,
             &self.sounds,
             &self.vowel_lookups.sorted_height,
+            &self.vowel_lookups.empty_rows,
             &self.vowel_lookups.backness,
             "vowels",
             &mut self.settings,
@@ -498,6 +510,34 @@ impl IpaApp {
             ui.spacing_mut().item_spacing = prev_spacing;
         });
     }
+
+    fn update_empty_rows(&mut self) {
+        for m in &self.consonant_lookups.sorted_manners {
+            if self.selected.map.iter().filter(|(_,b)| **b).filter_map(|(id, _)| self.sounds.get(id)).any(
+                |s| match &s.description {
+                    SoundKind::Consonant(c) => { &c.manners == m }
+                    _ => { false }
+                }
+            ) {
+                self.consonant_lookups.empty_rows.insert(m.clone(), false);
+            } else {
+                self.consonant_lookups.empty_rows.insert(m.clone(), true);
+            }
+        }
+
+        for h in &self.vowel_lookups.sorted_height {
+            if self.selected.map.iter().filter(|(_,b)| **b).filter_map(|(id, _)| self.sounds.get(id)).any(
+                |s| match &s.description {
+                    SoundKind::Vowel(v) => { &v.height == h }
+                    _ => { false }
+                }
+            ) {
+                self.vowel_lookups.empty_rows.insert(h.clone(), false);
+            } else {
+                self.vowel_lookups.empty_rows.insert(h.clone(), true);
+            }
+        }
+    }
 }
 
 impl SubApp for IpaApp {
@@ -519,6 +559,7 @@ impl SubApp for IpaApp {
             });
         });
         if self.selected.changed {
+            self.update_empty_rows();
             self.update_categories(shared_data);
         }
     }
