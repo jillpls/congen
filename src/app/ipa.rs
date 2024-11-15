@@ -412,7 +412,7 @@ impl IpaApp {
     ) {
         Self::display_sound_table_header(ui, settings, name);
             ui.push_id(name, |ui| {
-                ScrollArea::both().show(ui, |ui| {
+                ScrollArea::horizontal().show(ui, |ui| {
                 let mut table = TableBuilder::new(ui)
                     .id_salt(name)
                     .striped(true)
@@ -480,6 +480,27 @@ impl IpaApp {
     }
 
     fn vowel_table(&mut self, ui: &mut Ui) {
+        let cols = if self.settings.hide_unselected.contains("vowels") {
+            self.selected
+                .map
+                .iter()
+                .filter_map(|(id, b)| {
+                    if *b {
+                        self.sounds.get(id).and_then(|v| match &v.description {
+                            SoundKind::Vowel(v) => Some(v.backness),
+                            _ => None,
+                        })
+                    } else {
+                        None
+                    }
+                })
+                .collect::<HashSet<_>>()
+                .into_iter()
+                .sorted()
+                .collect::<Vec<_>>()
+        } else {
+            self.vowel_lookups.backness.clone()
+        };
         Self::display_sound_table(
             ui,
             &self.vowel_lookups.by_height,
@@ -487,7 +508,7 @@ impl IpaApp {
             &self.sounds,
             &self.vowel_lookups.sorted_height,
             &self.vowel_lookups.empty_rows,
-            &self.vowel_lookups.backness,
+            &cols,
             "vowels",
             &mut self.settings,
         );
@@ -544,7 +565,8 @@ impl SubApp for IpaApp {
     fn update(&mut self, ctx: &Context, frame: &mut eframe::Frame, shared_data: &mut SharedData) {
         self.selected.changed = false;
         egui::SidePanel::right("results")
-            .min_width(200.)
+            .min_width(100.)
+            .default_width(200.)
             .show(ctx, |ui| {
                 ui.heading("Categories:");
                 self.categories(ui, &shared_data);
