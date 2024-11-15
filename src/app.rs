@@ -139,7 +139,19 @@ impl App for WrapperApp {
         egui::TopBottomPanel::bottom("footer").show(ctx, |ui| {
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                 powered_by_egui_and_eframe(ui);
-                ui.hyperlink_to("source", "https://github.com/jillpls/congen");
+                ui.horizontal(|ui| {
+                    ui.label("Found a bug or have any suggestions? email me:");
+                ui.hyperlink_to("dev@jillplease.de", "mailto:dev@jillplease.de?subject=ConGen") });
+                ui.horizontal(|ui| {
+                    ui.label("Source:");
+                    ui.hyperlink_to("github", "https://github.com/jillpls/congen");
+                });
+                ui.label(
+                    egui::RichText::new("⚠ Work in Progess ⚠")
+                        .small()
+                        .color(ui.visuals().warn_fg_color),
+                )
+                    .on_hover_text("Some functionalities are still work in progress and might not do anything");
                 egui::warn_if_debug_build(ui);
             });
         });
