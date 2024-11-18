@@ -50,7 +50,7 @@ b,bilabial,voiced,plosive,0
 pɸ,bilabial,voiceless,non-sibilant affricate,10
 pß,bilabial,voiced,non-sibilant affricate,10
 ɸ,bilabial,voiceless,non-sibilant fricative,10
-ß,bilabial,voiced,non-sibilant fricative,10
+β,bilabial,voiced,non-sibilant fricative,10
 ⱱ̟,bilabial,voiced,tap/flap,10
 ʙ̥,bilabial,voiceless,trill,10
 ʙ,bilabial,voiced,trill,10
