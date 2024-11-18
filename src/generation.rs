@@ -47,22 +47,30 @@ impl PartialOrd for Word {
     }
 }
 
+impl Word {
+    pub fn display(&self, rewrite: bool) -> String {
+        format!("{}",
+        self.syllables
+            .iter()
+            .map(|s| {
+                s.sounds
+                    .iter()
+                    .map(|s| s.display(rewrite))
+                    .collect::<Vec<_>>()
+                    .join("")
+            })
+            .collect::<Vec<_>>()
+            .join(""))
+    }
+}
+
 impl Display for Word {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
             "{}",
-            self.syllables
-                .iter()
-                .map(|s| {
-                    s.sounds
-                        .iter()
-                        .map(|s| s.representation.clone())
-                        .collect::<Vec<_>>()
-                        .join("")
-                })
-                .collect::<Vec<_>>()
-                .join("")
+            self.display(false)
+
         )
     }
 }
@@ -450,7 +458,7 @@ impl Display for GenerationInstructionInner {
                     l.name.clone().unwrap_or("?".to_string())
                 }
                 GenerationInstructionInner::Sound(s) => {
-                    s.representation.clone()
+                    s.representation().to_string()
                 }
             }
         )
@@ -474,7 +482,7 @@ impl WordGen {
             .into_iter()
             .map(|r| match r {
                 ShallowGenResult::Sound(s) => (
-                    s.representation.clone(),
+                    s.representation().to_string(),
                     Syllable {
                         instruction: None,
                         sounds: vec![s.clone()],
@@ -486,7 +494,7 @@ impl WordGen {
                         .into_iter()
                         .filter_map(|v| match v {
                             ShallowGenResult::Sound(s) => {
-                                Some((s.representation.clone(), s.clone()))
+                                Some((s.representation().to_string(), s.clone()))
                             }
                             ShallowGenResult::Instruction(i) => i
                                 .instruction

@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Formatter;
 use uuid::Uuid;
+use crate::rewrite::RewriteRuleCollection;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WordGenSettings {
@@ -43,6 +44,7 @@ enum OutputStyle {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct WordDisplaySettings {
     output_style: OutputStyle,
+    rewrite: bool,
 }
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
@@ -54,6 +56,7 @@ pub struct WordGenApp {
     syllables_str: String,
     words_str: String,
     rewrites_str: String,
+    rewrite_rules: RewriteRuleCollection,
     output: Option<Vec<Word>>,
     open_help: bool,
     deviation_items: Vec<String>,
@@ -107,6 +110,7 @@ impl Default for WordGenApp {
             syllables_str: "A=(C)V(C)".to_string(),
             words_str: "AA3".to_string(),
             rewrites_str: "".to_string(),
+            rewrite_rules: Default::default(),
             output: None,
             open_help: false,
             deviation_items: vec![
@@ -130,8 +134,7 @@ fn categories_to_str(categories: &Vec<(String, Vec<(Uuid, Sound)>)>) -> String {
                 "{}={}",
                 n,
                 v.iter()
-                    .map(|(_, s)| &s.representation)
-                    .cloned()
+                    .map(|(_, s)| s.representation().to_string())
                     .collect::<Vec<_>>()
                     .join("")
             )
@@ -178,6 +181,7 @@ fn category_from_str(
                         representation: s.clone(),
                         description: SoundKind::Custom,
                         complexity: 10,
+                        ..Default::default()
                     },
                 ));
             (id, sound)
@@ -253,6 +257,15 @@ impl SubApp for WordGenApp {
                         ui.label("Words: ");
                         ui.text_edit_multiline(&mut self.words_str);
                     });
+
+                    ui.vertical(|ui| {
+                        ui.label("Rewrite Rules:");
+                        if ui.text_edit_multiline(&mut self.rewrites_str).changed() {
+                            if let Ok(rules) = RewriteRuleCollection::try_parse(&self.rewrites_str) {
+                                self.rewrite_rules = rules;
+                            }
+                        }
+                    });
                 });
             });
 
@@ -322,6 +335,7 @@ impl SubApp for WordGenApp {
                             output.sort_by(|a, b| count_sounds(a).cmp(&count_sounds(b)));
                         }
                     }
+                    output.iter_mut().for_each(|w| self.rewrite_rules.apply_to_word(w));
                     self.output = Some(output);
                 }
 
@@ -393,6 +407,8 @@ impl SubApp for WordGenApp {
                         "none".to_string()
                     };
                 }
+                ui.separator();
+                ui.checkbox(&mut self.settings.word_display.rewrite, "Rewrite Output");
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -454,13 +470,13 @@ impl WordGenApp {
 fn display_word(ui: &mut egui::Ui, word: &Word, settings: &WordDisplaySettings) {
     ui.horizontal(|ui| match settings.output_style {
         OutputStyle::WordExplanation => {
-            ui.label(format!("{}", word))
+            ui.label(format!("{}", word.display(settings.rewrite)))
                 .on_hover_text(word.instruction.clone().unwrap_or_default());
         }
         OutputStyle::SyllableExplanation => {
             ui.spacing_mut().item_spacing = Vec2::new(0., 0.);
             for (i, syllable) in word.syllables.iter().enumerate() {
-                display_syllable(ui, syllable, i + 1);
+                display_syllable(ui, syllable, settings);
                 if i < word.syllables.len() - 1 {
                     ui.separator();
                 }
@@ -469,22 +485,22 @@ fn display_word(ui: &mut egui::Ui, word: &Word, settings: &WordDisplaySettings) 
         OutputStyle::SoundExplanation => {
             word.syllables.iter().for_each(|s| {
                 s.sounds.iter().for_each(|s| {
-                    ui.label(&s.representation)
+                    ui.label(s.display(settings.rewrite))
                         .on_hover_text(s.description_str());
                 })
             });
         }
         OutputStyle::Raw => {
-            ui.label(format!("{}", word));
+            ui.label(format!("{}", word.display(settings.rewrite)));
         }
     });
 }
 
-fn display_syllable(ui: &mut egui::Ui, syllable: &Syllable, i: usize) {
+fn display_syllable(ui: &mut egui::Ui, syllable: &Syllable, settings: &WordDisplaySettings) {
     let str = syllable
         .sounds
         .iter()
-        .map(|s| s.representation.clone())
+        .map(|s| s.display(settings.rewrite))
         .collect::<Vec<_>>()
         .join("");
     ui.label(str).on_hover_text(

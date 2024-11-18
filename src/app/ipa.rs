@@ -526,7 +526,7 @@ impl IpaApp {
             ui.spacing_mut().item_spacing = Vec2::new(0., 0.);
             ui.label(&format!("{}=", cat_name));
             for (_, s) in contents {
-                ui.label(&s.representation);
+                ui.label(s.representation());
             }
             ui.spacing_mut().item_spacing = prev_spacing;
         });
@@ -612,7 +612,7 @@ fn display_sound_inner(
         let on_hover = sound.description_str();
         if selected.is_selected(id) {
             if ui
-                .selectable_label(true, &sound.representation)
+                .selectable_label(true, sound.representation())
                 .on_hover_text(on_hover)
                 .clicked()
                 && !settings.lock_all_tables
@@ -623,7 +623,7 @@ fn display_sound_inner(
         } else {
             if !settings.hide_unselected.contains(name) {
                 if ui
-                    .selectable_label(false, &sound.representation)
+                    .selectable_label(false, sound.representation())
                     .on_hover_text(on_hover)
                     .clicked()
                     && !settings.lock_all_tables
@@ -634,7 +634,7 @@ fn display_sound_inner(
             }
         }
     } else {
-        let mut editable = sound.representation.clone();
+        let mut editable = sound.representation().to_string();
         if !settings.hide_unselected.contains(name) || selected.is_selected(id) {
             let mut edit = ui.text_edit_singleline(&mut editable);
             if selected.is_selected(id) {

@@ -1,8 +1,18 @@
+use crate::generation::{Syllable, Word};
+use crate::sounds::Sound;
+
+#[derive(Default)]
 pub struct RewriteRuleCollection {
     rules: Vec<RewriteRule>,
 }
 
 impl RewriteRuleCollection {
+    pub fn apply_to_word(&self, word: &mut Word) {
+        for rule in &self.rules {
+            rule.apply_to_word(word);
+        }
+    }
+
     pub fn try_parse(input: &str) -> Result<Self, ()> {
         let rules = input
             .split("\n")
@@ -41,6 +51,24 @@ impl RewriteRule {
 
     pub fn apply_to_str(&self, input: &str) -> String {
         input.replace(&self.from, &self.to)
+    }
+
+    pub fn apply_to_word(&self, word: &mut Word) {
+        for syllable in word.syllables.iter_mut() {
+            self.apply_to_syllable(syllable);
+        }
+    }
+
+    pub fn apply_to_syllable(&self, syllable: &mut Syllable) {
+        for sound in syllable.sounds.iter_mut() {
+            self.apply_to_sound(sound);
+        }
+    }
+
+    pub fn apply_to_sound(&self, sound: &mut Sound) {
+        if sound.representation() == self.from.as_str() {
+            sound.rewrite = Some(self.to.clone());
+        }
     }
 }
 

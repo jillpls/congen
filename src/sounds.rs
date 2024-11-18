@@ -1,8 +1,28 @@
-#[derive(Debug, Eq, PartialEq, Clone, Hash, Ord)]
+#[derive(Debug, Default, Eq, PartialEq, Clone, Hash, Ord)]
 pub struct Sound {
     pub(crate) representation: String,
     pub(crate) description: SoundKind,
+    pub(crate) rewrite: Option<String>,
     pub complexity: usize,
+}
+
+impl Sound {
+    pub fn representation(&self) -> &str {
+        self.representation.as_str()
+    }
+
+    pub fn rewrite(&self) -> Option<&String> {
+        self.rewrite.as_ref()
+    }
+
+    pub fn display(&self, rewrite: bool) -> &str {
+        if rewrite {
+            if let Some(r) = &self.rewrite {
+                return r.as_str()
+            }
+        }
+        self.representation()
+    }
 }
 
 impl std::cmp::PartialOrd for Sound {
@@ -90,6 +110,7 @@ impl Sound {
             representation,
             description: SoundKind::Custom,
             complexity: 0,
+            ..Default::default()
         }
     }
 
@@ -101,10 +122,11 @@ impl Sound {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Hash)]
+#[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Hash)]
 pub enum SoundKind {
     Vowel(Vowel),
     Consonant(Consonant),
+    #[default]
     Custom,
 }
 
@@ -191,6 +213,7 @@ mod vowels {
                     roundedness,
                 }),
                 complexity,
+                ..Default::default()
             })
         }
     }
@@ -480,6 +503,7 @@ mod consonants {
                 representation,
                 description: SoundKind::Consonant(consonant),
                 complexity,
+                ..Default::default()
             })
         }
 
