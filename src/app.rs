@@ -122,12 +122,11 @@ impl WrapperApp {
                 if crate::APP_VERSION.starts_with('0') {
                     ui.separator();
                     ui.label(
-                        egui::RichText::new("⚠ Beta Version ⚠")
-                            .color(ui.visuals().warn_fg_color),
+                        egui::RichText::new("⚠ Beta Version ⚠").color(ui.visuals().warn_fg_color),
                     )
-                        .on_hover_text(
-                            "Some functionalities are still work in progress and might not do anything",
-                        );
+                    .on_hover_text(
+                        "Some functionalities are still work in progress and might not do anything",
+                    );
                 }
             });
         });

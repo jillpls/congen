@@ -1,5 +1,5 @@
-use crate::generation::{Syllable, Word};
 use crate::sounds::Sound;
+use crate::word::{Syllable, SyllablePart, Word};
 
 #[derive(Default)]
 pub struct RewriteRuleCollection {
@@ -60,7 +60,19 @@ impl RewriteRule {
     }
 
     pub fn apply_to_syllable(&self, syllable: &mut Syllable) {
-        for sound in syllable.sounds.iter_mut() {
+        if let Some(o) = syllable.onset.as_mut() {
+            self.apply_to_syllable_part(o);
+        }
+
+        self.apply_to_syllable_part(&mut syllable.nucleus);
+
+        if let Some(c) = syllable.coda.as_mut() {
+            self.apply_to_syllable_part(c);
+        }
+    }
+
+    pub fn apply_to_syllable_part(&self, syllable_part: &mut SyllablePart) {
+        for sound in syllable_part.sounds.iter_mut() {
             self.apply_to_sound(sound);
         }
     }

@@ -18,7 +18,7 @@ impl Sound {
     pub fn display(&self, rewrite: bool) -> &str {
         if rewrite {
             if let Some(r) = &self.rewrite {
-                return r.as_str()
+                return r.as_str();
             }
         }
         self.representation()

@@ -53,7 +53,7 @@ pub struct ConsonantLookups {
     places: Vec<Place>,
     by_manners: HashMap<Manners, HashMap<Place, Vec<Uuid>>>,
     sorted_manners: Vec<Manners>,
-    empty_rows: HashMap<Manners, bool>
+    empty_rows: HashMap<Manners, bool>,
 }
 
 #[derive(Default)]
@@ -61,7 +61,7 @@ pub struct VowelLookups {
     backness: Vec<Backness>,
     by_height: HashMap<Height, HashMap<Backness, Vec<Uuid>>>,
     sorted_height: Vec<Height>,
-    empty_rows: HashMap<Height, bool>
+    empty_rows: HashMap<Height, bool>,
 }
 
 #[derive(Default)]
@@ -411,8 +411,8 @@ impl IpaApp {
         settings: &mut IpaAppSettings,
     ) {
         Self::display_sound_table_header(ui, settings, name);
-            ui.push_id(name, |ui| {
-                ScrollArea::horizontal().show(ui, |ui| {
+        ui.push_id(name, |ui| {
+            ScrollArea::horizontal().show(ui, |ui| {
                 let mut table = TableBuilder::new(ui)
                     .id_salt(name)
                     .striped(true)
@@ -424,7 +424,9 @@ impl IpaApp {
                     })
                     .body(|mut body| {
                         for n in rows {
-                            if !settings.hide_unselected.contains(name) || !empty_rows.get(n).copied().unwrap_or(true) {
+                            if !settings.hide_unselected.contains(name)
+                                || !empty_rows.get(n).copied().unwrap_or(true)
+                            {
                                 body.row(20., |mut row| {
                                     Self::display_sound_row(
                                         &lookup,
@@ -534,12 +536,17 @@ impl IpaApp {
 
     fn update_empty_rows(&mut self) {
         for m in &self.consonant_lookups.sorted_manners {
-            if self.selected.map.iter().filter(|(_,b)| **b).filter_map(|(id, _)| self.sounds.get(id)).any(
-                |s| match &s.description {
-                    SoundKind::Consonant(c) => { &c.manners == m }
-                    _ => { false }
-                }
-            ) {
+            if self
+                .selected
+                .map
+                .iter()
+                .filter(|(_, b)| **b)
+                .filter_map(|(id, _)| self.sounds.get(id))
+                .any(|s| match &s.description {
+                    SoundKind::Consonant(c) => &c.manners == m,
+                    _ => false,
+                })
+            {
                 self.consonant_lookups.empty_rows.insert(m.clone(), false);
             } else {
                 self.consonant_lookups.empty_rows.insert(m.clone(), true);
@@ -547,12 +554,17 @@ impl IpaApp {
         }
 
         for h in &self.vowel_lookups.sorted_height {
-            if self.selected.map.iter().filter(|(_,b)| **b).filter_map(|(id, _)| self.sounds.get(id)).any(
-                |s| match &s.description {
-                    SoundKind::Vowel(v) => { &v.height == h }
-                    _ => { false }
-                }
-            ) {
+            if self
+                .selected
+                .map
+                .iter()
+                .filter(|(_, b)| **b)
+                .filter_map(|(id, _)| self.sounds.get(id))
+                .any(|s| match &s.description {
+                    SoundKind::Vowel(v) => &v.height == h,
+                    _ => false,
+                })
+            {
                 self.vowel_lookups.empty_rows.insert(h.clone(), false);
             } else {
                 self.vowel_lookups.empty_rows.insert(h.clone(), true);

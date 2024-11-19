@@ -6,6 +6,7 @@ mod raw_data;
 mod rewrite;
 mod sound_change;
 pub mod sounds;
+mod word;
 
 pub use app::WrapperApp;
 use std::fmt::Formatter;

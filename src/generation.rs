@@ -2,13 +2,14 @@
 
 use crate::app::Categories;
 use crate::sounds::Sound;
+use crate::word::{Syllable, SyllablePart, Word};
 use crate::{ConGenError, ConGenResult};
 use rand::prelude::SliceRandom;
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
-use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Display, Formatter};
+use egui::util::undoer::Settings;
 
 #[derive(Copy, Clone)]
 pub struct GenerationSettings {
@@ -23,62 +24,11 @@ impl Default for GenerationSettings {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Ord)]
-pub struct Syllable {
-    pub(crate) instruction: Option<String>,
-    pub(crate) sounds: Vec<Sound>,
-}
-
-impl PartialOrd for Syllable {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.sounds.partial_cmp(&other.sounds)
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Ord)]
-pub struct Word {
-    pub(crate) instruction: Option<String>,
-    pub(crate) syllables: Vec<Syllable>,
-}
-
-impl PartialOrd for Word {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.syllables.partial_cmp(&other.syllables)
-    }
-}
-
-impl Word {
-    pub fn display(&self, rewrite: bool) -> String {
-        format!("{}",
-        self.syllables
-            .iter()
-            .map(|s| {
-                s.sounds
-                    .iter()
-                    .map(|s| s.display(rewrite))
-                    .collect::<Vec<_>>()
-                    .join("")
-            })
-            .collect::<Vec<_>>()
-            .join(""))
-    }
-}
-
-impl Display for Word {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            self.display(false)
-
-        )
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct GenerationInstructionRoot {
-    name: Option<String>,
+    pub(crate) name: Option<String>,
     pub(crate) instruction: GenerationInstruction,
+    pub(crate) depth: usize,
 }
 
 impl Display for GenerationInstructionRoot {
@@ -97,7 +47,9 @@ pub fn generate_map(
 ) -> HashMap<String, GenerationInstructionInner> {
     let mut map: HashMap<String, GenerationInstruction> = HashMap::new();
     let mut artificials = HashSet::new();
+    let mut depth = 0;
     for e in instructions.clone() {
+        depth = e.depth;
         let name = e.name.clone().unwrap_or("?".to_string()); // TODO
         if let Some(g) = map.get_mut(&name) {
             let boxed = Box::new(g.clone());
@@ -118,6 +70,7 @@ pub fn generate_map(
                 GenerationInstructionInner::LowerLevel(Box::new(GenerationInstructionRoot {
                     name: Some(s),
                     instruction: e,
+                    depth,
                 })),
             )
         })
@@ -147,6 +100,7 @@ impl GenerationInstructionRoot {
                         })
                         .collect(),
                 ),
+                depth: 0,
             })
         }
         result
@@ -162,6 +116,33 @@ impl GenerationInstructionRoot {
             .collect()
     }
 
+    pub(crate) fn parse_all_name_value(input: &Vec<(String, String)>, lookup: &HashMap<String, GenerationInstructionInner>) -> Vec<Self> {
+        input.iter().filter_map(|(n, v)| {
+            GenerationInstructionRoot::try_parse_name_value(Some(n.clone()), v, lookup).ok()
+        }).collect::<Vec<_>>()
+    }
+
+    pub fn try_parse_name_value(name: Option<String>, value: &str, lookup: &HashMap<String, GenerationInstructionInner>) -> ConGenResult<Self> {
+        let depth = if let Some(k) = lookup
+            .values()
+            .filter(|k| matches!(k, &&GenerationInstructionInner::LowerLevel(_)))
+            .next()
+        {
+            match k {
+                GenerationInstructionInner::LowerLevel(r) => r.depth + 1,
+                GenerationInstructionInner::Sound(_) => 0,
+            }
+        } else {
+            0
+        };
+
+        Ok(Self {
+            name,
+            instruction: GenerationInstruction::try_parse(value, lookup)?,
+            depth,
+        })
+    }
+
     pub fn try_parse(
         input: &str,
         lookup: &HashMap<String, GenerationInstructionInner>,
@@ -175,10 +156,7 @@ impl GenerationInstructionRoot {
         } else {
             (None, split[0])
         };
-        Ok(Self {
-            name,
-            instruction: GenerationInstruction::try_parse(to_parse, lookup)?,
-        })
+        Self::try_parse_name_value(name, to_parse, lookup)
     }
 }
 
@@ -189,6 +167,11 @@ pub enum GenerationInstruction {
     List(Vec<Box<GenerationInstruction>>),
     Options(Vec<Box<GenerationInstruction>>),
     Part(Box<GenerationInstructionInner>),
+    Syllable(
+        Option<Box<GenerationInstructionRoot>>,
+        Box<GenerationInstructionRoot>,
+        Option<Box<GenerationInstructionRoot>>,
+    ),
 }
 
 impl Display for GenerationInstruction {
@@ -218,6 +201,14 @@ impl Display for GenerationInstruction {
                 }
                 GenerationInstruction::Part(p) => {
                     p.to_string()
+                }
+                GenerationInstruction::Syllable(o, n, c) => {
+                    format!(
+                        "<{}-{}-{}>",
+                        o.as_ref().map(|v| v.to_string()).unwrap_or_default(),
+                        n,
+                        c.as_ref().map(|v| v.to_string()).unwrap_or_default()
+                    )
                 }
             }
         )
@@ -385,7 +376,7 @@ impl GenerationInstruction {
                 ShallowGenResult::Sound(s) => {
                     return Some(s.clone());
                 }
-                ShallowGenResult::Instruction(_) => {}
+                _ => {}
             }
         }
         None
@@ -428,6 +419,9 @@ impl GenerationInstruction {
             GenerationInstruction::Part(p) => {
                 vec![p.shallow_generate()]
             }
+            GenerationInstruction::Syllable(o, n, c) => {
+                vec![ShallowGenResult::Syllable(o.as_ref(), n, c.as_ref())]
+            }
         }
     }
 }
@@ -465,9 +459,25 @@ impl Display for GenerationInstructionInner {
     }
 }
 
+#[derive(Debug)]
 pub enum ShallowGenResult<'a> {
     Sound(&'a Sound),
     Instruction(&'a Box<GenerationInstructionRoot>),
+    Syllable(
+        Option<&'a Box<GenerationInstructionRoot>>,
+        &'a Box<GenerationInstructionRoot>,
+        Option<&'a Box<GenerationInstructionRoot>>,
+    ),
+}
+
+impl Display for ShallowGenResult<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            ShallowGenResult::Sound(_) => { "Sound" }
+            ShallowGenResult::Instruction(_) => { "Instruction"}
+            ShallowGenResult::Syllable(_, _, _) => { "Syllable" }
+        })
+    }
 }
 
 pub struct WordGen {
@@ -475,46 +485,76 @@ pub struct WordGen {
 }
 
 impl WordGen {
-    pub(crate) fn generate<R: Rng>(&self, rng: &mut R, settings: &GenerationSettings) -> Word {
-        let i = self.instructions.choose(rng).unwrap(); // TODO: Unwrap
-        let shallow = i.shallow_generate(rng, settings);
-        let (instructions, syllables): (Vec<String>, Vec<Syllable>) = shallow
-            .into_iter()
-            .map(|r| match r {
-                ShallowGenResult::Sound(s) => (
-                    s.representation().to_string(),
-                    Syllable {
+    fn generate_sound<R: Rng>(rng: &mut R, settings: &GenerationSettings, r: ShallowGenResult) -> Sound {
+        match r {
+            ShallowGenResult::Sound(s) => { s.clone() }
+            ShallowGenResult::Instruction(i) => {
+                i.instruction.generate_sound(rng, settings).unwrap()
+            }
+            ShallowGenResult::Syllable(_, _, _) => { todo!()}
+        }
+    }
+    
+    fn generate_syllable_part<R: Rng>(rng: &mut R, settings: &GenerationSettings, r: ShallowGenResult) -> SyllablePart {
+        match r {
+            ShallowGenResult::Instruction(i) => { 
+                SyllablePart {
+                    instruction: Some(i.to_string()),
+                    sounds : i.shallow_generate(rng,
+                                                settings).into_iter().map( | r| Self::generate_sound(rng,
+                    settings,
+                    r)).collect()
+                }
+            }
+            ShallowGenResult::Sound(s) => { SyllablePart {
+                instruction: s.representation.clone().into(),
+                sounds: vec![s.clone()],
+            }}
+            _ => { todo!(); }
+        }
+    }
+
+    fn generate_syllable<R: Rng>(rng: &mut R, settings: &GenerationSettings, r: ShallowGenResult) -> Syllable {
+        match r {
+            ShallowGenResult::Sound(s) => {
+                Syllable {
+                    instruction: Some(s.representation().to_string()),
+                    onset: None,
+                    nucleus: SyllablePart {
                         instruction: None,
                         sounds: vec![s.clone()],
                     },
-                ),
-                ShallowGenResult::Instruction(i) => {
-                    let shallow = i.shallow_generate(rng, settings);
-                    let (instructions, sounds): (Vec<String>, Vec<Sound>) = shallow
-                        .into_iter()
-                        .filter_map(|v| match v {
-                            ShallowGenResult::Sound(s) => {
-                                Some((s.representation().to_string(), s.clone()))
-                            }
-                            ShallowGenResult::Instruction(i) => i
-                                .instruction
-                                .generate_sound(rng, settings)
-                                .map(|s| (i.name.clone().unwrap_or("?".to_string()), s)),
-                        })
-                        .unzip();
-                    (
-                        i.name.clone().unwrap_or("?".to_string()),
-                        Syllable {
-                            instruction: Some(instructions.join("")),
-                            sounds,
-                        },
-                    )
+                    coda: None,
+                    simple: true,
                 }
-            })
-            .unzip();
-        Word {
-            instruction: Some(instructions.join("")),
-            syllables,
+            }
+            ShallowGenResult::Instruction(_) => { todo!(); }
+            ShallowGenResult::Syllable(o, n, c) => { 
+                let mut nucleus =
+                    n.shallow_generate(rng, settings).into_iter().map(|r| Self::generate_syllable_part(rng, settings, r)).collect::<Vec<_>>();
+                let nucleus = nucleus.remove(0);
+                let onset : Option<SyllablePart> = o.map(|v|
+                v.shallow_generate(rng, settings).into_iter().map(|r| Self::generate_syllable_part(rng, settings, r)).collect::<Vec<_>>().get(0).cloned()).flatten();
+                let coda: Option<SyllablePart> = c.map(|v|
+                    v.shallow_generate(rng, settings).into_iter().map(|r| Self::generate_syllable_part(rng, settings, r)).collect::<Vec<_>>().get(0).cloned()).flatten();
+                Syllable {
+                    instruction: Some(format!("{}-{}-{}", o.map(|v| v.to_string()).unwrap_or_default(), n, c.map(|v| v.to_string()).unwrap_or_default())),
+                    onset,
+                    nucleus,
+                    coda,
+                    simple: false,
+                }
+            }
         }
+    }
+
+    pub(crate) fn generate<R: Rng>(&self, rng: &mut R, settings: &GenerationSettings) -> Word {
+        let i = self.instructions.choose(rng).unwrap(); // TODO: Unwrap
+        let shallow = i.shallow_generate(rng, settings);
+        println!("{:?}", i.name);
+        println!("{}", shallow.iter().map(|r| r.to_string()).collect::<Vec<_>>().join("\n"));
+
+
+        todo!()
     }
 }

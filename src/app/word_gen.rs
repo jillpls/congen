@@ -1,17 +1,17 @@
 use crate::app::{Categories, SharedData, SubApp};
 use crate::generation::{
-    generate_map, GenerationInstruction, GenerationInstructionRoot, GenerationSettings, Syllable,
-    Word, WordGen,
+    generate_map, GenerationInstruction, GenerationInstructionRoot, GenerationSettings, WordGen,
 };
+use crate::rewrite::RewriteRuleCollection;
 use crate::sounds::{Sound, SoundKind};
-use egui::{ScrollArea, Vec2};
+use crate::word::{Syllable, Word};
+use egui::{Button, ScrollArea, TextEdit, Ui, Vec2};
 use egui_dropdown::DropDownBox;
 use rand::thread_rng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Formatter;
 use uuid::Uuid;
-use crate::rewrite::RewriteRuleCollection;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WordGenSettings {
@@ -33,6 +33,39 @@ impl Default for WordGenSettings {
 }
 
 #[derive(Clone, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OncInput {
+    pub name_str: String,
+    pub value_str: String,
+    pub added: Vec<(String, String)>
+}
+
+impl OncInput {
+
+    pub fn default_coda() -> Self {
+        Self {
+            name_str: "".to_string(),
+            value_str: "".to_string(),
+            added: vec![("C".to_string(), "(C)".to_string())],
+        }
+    }
+
+    pub fn default_nucleus() -> Self {
+        Self {
+            name_str: "".to_string(),
+            value_str: "".to_string(),
+            added: vec![("N".to_string(), "V".to_string())],
+        }
+    }
+    pub fn default_onset() -> Self {
+        Self {
+            name_str: "".to_string(),
+            value_str: "".to_string(),
+            added: vec![("O".to_string(), "(C)".to_string())],
+        }
+    }
+}
+
+#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
 enum OutputStyle {
     WordExplanation,
     #[default]
@@ -47,13 +80,49 @@ pub struct WordDisplaySettings {
     rewrite: bool,
 }
 
+#[derive(Clone, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SyllablesInput {
+    pub name_str: String,
+    pub onset_str: String,
+    pub nucleus_str: String,
+    pub coda_str: String,
+    pub added: Vec<(String, Option<String>, String, Option<String>)>
+}
+
+
+impl SyllablesInput {
+    pub fn default_simple() -> Self {
+       Self {
+           name_str: "".to_string(),
+           onset_str: "".to_string(),
+           nucleus_str: "".to_string(),
+           coda_str: "".to_string(),
+           added: vec![("A".to_string(), Some("O".to_string()), "N".to_string(), Some("C".to_string()))],
+       }
+    }
+}
+
+impl SyllablesInput {
+    pub fn reset(&mut self) {
+        self.name_str = String::new();
+        self.onset_str = String::new();
+        self.nucleus_str = String::new();
+        self.coda_str = String::new();
+    }
+}
+
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 pub struct WordGenApp {
     pub(crate) settings: WordGenSettings,
     // Example stuff:
+    advanced: bool,
     label: String,
     categories_str: String,
     syllables_str: String,
+    onset_input: OncInput,
+    nucleus_input: OncInput,
+    coda_input: OncInput,
+    syllables_input: SyllablesInput,
     words_str: String,
     rewrites_str: String,
     rewrite_rules: RewriteRuleCollection,
@@ -105,9 +174,14 @@ impl Default for WordGenApp {
         Self {
             // Example stuff:
             settings: Default::default(),
+            advanced: false,
             label: "Hello World!".to_owned(),
             categories_str: "C=ptk\nV=aeiou".to_string(),
             syllables_str: "A=(C)V(C)".to_string(),
+            onset_input: OncInput::default_onset(),
+            nucleus_input: OncInput::default_nucleus(),
+            coda_input: OncInput::default_coda(),
+            syllables_input: SyllablesInput::default_simple(),
             words_str: "AA3".to_string(),
             rewrites_str: "".to_string(),
             rewrite_rules: Default::default(),
@@ -226,47 +300,16 @@ impl SubApp for WordGenApp {
             .default_width(150.)
             .show(ctx, |ui| {
                 ui.heading("Input:");
-                ScrollArea::vertical().show(ui, |ui| {
-                    ui.vertical(|ui| {
-                        ui.label("Categories: ");
-                        ui.horizontal_wrapped(|ui| {
-                            if ui.button("Import from Ipa").clicked() {
-                                self.categories_str = categories_to_str(&shared_data.categories);
-                                self.categories = Some(shared_data.categories.clone());
-                            }
-                            if ui.button("Clear").clicked() {
-                                self.categories_str = String::new();
-                            }
-                        });
-                        if ui.text_edit_multiline(&mut self.categories_str).changed() {
-                            self.categories = try_categories_from_str(
-                                &shared_data.sounds,
-                                &shared_data.sound_by_representation,
-                                &self.categories_str,
-                                false,
-                            );
-                        }
-                    });
-
-                    ui.vertical(|ui| {
-                        ui.label("Syllables: ");
-                        ui.text_edit_multiline(&mut self.syllables_str);
-                    });
-
-                    ui.vertical(|ui| {
-                        ui.label("Words: ");
-                        ui.text_edit_multiline(&mut self.words_str);
-                    });
-
-                    ui.vertical(|ui| {
-                        ui.label("Rewrite Rules:");
-                        if ui.text_edit_multiline(&mut self.rewrites_str).changed() {
-                            if let Ok(rules) = RewriteRuleCollection::try_parse(&self.rewrites_str) {
-                                self.rewrite_rules = rules;
-                            }
-                        }
-                    });
+                ui.horizontal(|ui| {
+                    ui.selectable_value(&mut self.advanced, false, "Simple");
+                    ui.selectable_value(&mut self.advanced, true, "Advanced");
                 });
+                ui.separator();
+                if self.advanced {
+                    self.advanced_input(ui, shared_data);
+                } else {
+                    self.simple_input(ui, shared_data);
+                }
             });
 
         egui::SidePanel::left("buttons")
@@ -279,7 +322,8 @@ impl SubApp for WordGenApp {
                 ui.label("Word amount:");
                 ui.add(egui::DragValue::new(&mut self.settings.amount));
                 ui.end_row();
-                if ui.button("Generate Words!").clicked() {
+
+                if ui.add(Button::new("Generate Words!")).clicked() {
                     let categories = match &self.categories {
                         None => {
                             let mut r = GenerationInstructionRoot::parse_all(
@@ -298,8 +342,46 @@ impl SubApp for WordGenApp {
                         Some(c) => GenerationInstructionRoot::from_ipa_categories(&c),
                     };
                     let categories_map = generate_map(categories.clone());
-                    let syllables =
-                        GenerationInstructionRoot::parse_all(&self.syllables_str, &categories_map);
+                    let syllables = if self.advanced {
+                        let onset = GenerationInstructionRoot::parse_all_name_value(&self.onset_input.added, &categories_map);
+                        let onset_map = generate_map(onset.clone());
+                        let nucleus = GenerationInstructionRoot::parse_all_name_value(&self.nucleus_input.added, &categories_map);
+                        let nucleus_map = generate_map(nucleus.clone());
+                        let coda = GenerationInstructionRoot::parse_all_name_value(&self.coda_input.added, &categories_map);
+                        let coda_map = generate_map(coda.clone());
+                        println!("ONC-Sizes: {} {} {}", onset.len(), nucleus.len(), coda.len());
+                        self.syllables_input.added.clone().into_iter().map(|(name, o, n, c)| {
+                            let onset = o.and_then(|name|  onset_map.get(&name).map(|i| {
+                                Box::new(GenerationInstructionRoot {
+                                    name: Some(name),
+                                    instruction: GenerationInstruction::Part(Box::new(i.clone())),
+                                    depth: 1,
+                                })
+                            }));
+                            let coda = c.and_then(|name|  coda_map.get(&name).map(|i| {
+                                Box::new(GenerationInstructionRoot {
+                                    name: Some(name),
+                                    instruction: GenerationInstruction::Part(Box::new(i.clone())),
+                                    depth: 1,
+                                })
+                            }));
+                            let nucleus_instruction = nucleus_map.get(&n).unwrap();
+                            let nucleus = Box::new(
+                                GenerationInstructionRoot {
+                                    name: Some(n),
+                                    instruction: GenerationInstruction::Part(Box::new(nucleus_instruction.clone())),
+                                    depth: 1,
+                                }
+                            );
+                            GenerationInstructionRoot {
+                                name : Some(name.clone()),
+                                instruction: GenerationInstruction::Syllable(onset, nucleus, coda),
+                                depth : 2,
+                            }
+                        }).collect::<Vec<_>>()
+                    } else {
+                            GenerationInstructionRoot::parse_all(&self.syllables_str, &categories_map)
+                    };
                     let syllables_map = generate_map(syllables.clone());
                     let words =
                         GenerationInstructionRoot::parse_all(&self.words_str, &syllables_map);
@@ -330,12 +412,14 @@ impl SubApp for WordGenApp {
                         }
                         Sorting::SoundCount => {
                             fn count_sounds(word: &Word) -> usize {
-                                word.syllables.iter().map(|s| s.sounds.len()).sum()
+                                word.syllables.iter().map(|s| s.sounds().len()).sum()
                             }
                             output.sort_by(|a, b| count_sounds(a).cmp(&count_sounds(b)));
                         }
                     }
-                    output.iter_mut().for_each(|w| self.rewrite_rules.apply_to_word(w));
+                    output
+                        .iter_mut()
+                        .for_each(|w| self.rewrite_rules.apply_to_word(w));
                     self.output = Some(output);
                 }
 
@@ -377,8 +461,8 @@ impl SubApp for WordGenApp {
                             &mut self.deviation_buf,
                             |ui, text| ui.selectable_label(false, text),
                         )
-                        .filter_by_input(false)
-                        .desired_width(80.),
+                            .filter_by_input(false)
+                            .desired_width(80.),
                     );
                 });
                 let mut update = self.deviation_buf != prev;
@@ -455,6 +539,142 @@ impl SubApp for WordGenApp {
 }
 
 impl WordGenApp {
+
+    fn show_onc_input(ui: &mut Ui, input: &mut OncInput, settings: &WordGenSettings) {
+        input.added.retain(|(n, v)| {
+            ui.horizontal(|ui| {
+                ui.label(&format!("{}={}",n,v));
+                !ui.add(Button::new("x").small()).clicked()
+            }).inner
+        });
+        ui.vertical(|ui| {
+            ui.horizontal(|ui| {
+                let text_edit = TextEdit::singleline(&mut input.name_str).desired_width(10.);
+                ui.add(text_edit);
+                let text_edit = TextEdit::singleline(&mut input.value_str).desired_width(80.);
+                ui.add(text_edit);
+            });
+            if ui.add(Button::new("Add").small()).clicked() {
+                if !input.value_str.trim().is_empty() && !input.name_str.trim().is_empty() && input.name_str.trim().len() == 1 {
+                    input.added.push((input.name_str.clone(), input.value_str.clone()));
+                    input.name_str = String::new();
+                    input.value_str = String::new();
+                }
+            }
+        });
+    }
+    fn advanced_input(&mut self, ui: &mut Ui, shared_data: &SharedData) {
+        self.categories(ui, shared_data);
+        ui.horizontal_wrapped(|ui| {
+            ui.vertical(|ui| {
+                ui.label("Onset");
+                Self::show_onc_input(ui, &mut self.onset_input, &self.settings);
+            });
+
+            ui.separator();
+
+            ui.vertical(|ui| {
+                ui.label("Nucleus");
+                Self::show_onc_input(ui, &mut self.nucleus_input, &self.settings);
+            });
+            ui.separator();
+
+            ui.vertical(|ui| {
+                ui.label("Coda");
+                Self::show_onc_input(ui, &mut self.coda_input, &self.settings);
+            });
+        });
+        ui.vertical(|ui| {
+            ui.label("Syllables");
+            self.syllables_input.added.retain(|(name,o,n,c)| {
+                let label = format!("{}={}{}{}", name, o.clone().unwrap_or_default(), n, c.clone().unwrap_or_default());
+                ui.horizontal(|ui| {
+                    ui.label(&label);
+                    !ui.add(Button::new("x").small()).clicked()
+                }).inner
+            });
+            ui.horizontal(|ui| {
+                ui.add(TextEdit::singleline(&mut self.syllables_input.name_str).desired_width(10.)).on_hover_text("Name");
+                ui.add(TextEdit::singleline(&mut self.syllables_input.onset_str).desired_width(10.)).on_hover_text("Onset");
+                ui.add(TextEdit::singleline(&mut self.syllables_input.nucleus_str).desired_width(10.)).on_hover_text("Nucleus");
+                ui.add(TextEdit::singleline(&mut self.syllables_input.coda_str).desired_width(10.)).on_hover_text("Coda");
+            });
+            if ui.button("Add").clicked() {
+                if self.syllables_input.name_str.trim().is_empty() {}
+                else if self.syllables_input.nucleus_str.trim().is_empty() {}
+                else if self.syllables_input.name_str.trim().len() > 1 || self.syllables_input.nucleus_str.trim().len() > 1 || self.syllables_input.onset_str.trim().len() > 1 || self.syllables_input.coda_str.trim().len() > 1 {}
+                else {
+                    let onset = if self.syllables_input.onset_str.trim().is_empty() {
+                        None
+                    } else {
+                        Some(self.syllables_input.onset_str.clone())
+                    };
+
+                    let coda = if self.syllables_input.coda_str.trim().is_empty() {
+                        None
+                    } else {
+                        Some(self.syllables_input.coda_str.clone())
+                    };
+                    self.syllables_input.added.push((self.syllables_input.name_str.clone(), onset, self.syllables_input.nucleus_str.clone(), coda));
+                    self.syllables_input.reset();
+                }
+            }
+        });
+        self.words(ui, shared_data);
+    }
+
+    fn categories(&mut self, ui: &mut Ui, shared_data: &SharedData) {
+        ui.vertical(|ui| {
+            ui.label("Categories: ");
+            ui.horizontal_wrapped(|ui| {
+                if ui.button("Import from Ipa").clicked() {
+                    self.categories_str = categories_to_str(&shared_data.categories);
+                    self.categories = Some(shared_data.categories.clone());
+                }
+                if ui.button("Clear").clicked() {
+                    self.categories_str = String::new();
+                }
+            });
+            if ui.text_edit_multiline(&mut self.categories_str).changed() {
+                self.categories = try_categories_from_str(
+                    &shared_data.sounds,
+                    &shared_data.sound_by_representation,
+                    &self.categories_str,
+                    false,
+                );
+            }
+        });
+    }
+
+    fn words(&mut self, ui: &mut Ui, shared_data: &SharedData) {
+        ui.vertical(|ui| {
+            ui.label("Words: ");
+            ui.text_edit_multiline(&mut self.words_str);
+        });
+    }
+    fn simple_input(&mut self, ui: &mut Ui, shared_data: &SharedData) {
+        ScrollArea::vertical().show(ui, |ui| {
+            self.categories(ui, shared_data);
+
+            ui.vertical(|ui| {
+                ui.label("Syllables: ");
+                ui.text_edit_multiline(&mut self.syllables_str);
+            });
+
+            ui.vertical(|ui| {
+                ui.label("Rewrite Rules:");
+                if ui.text_edit_multiline(&mut self.rewrites_str).changed() {
+                    if let Ok(rules) = RewriteRuleCollection::try_parse(&self.rewrites_str)
+                    {
+                        self.rewrite_rules = rules;
+                    }
+                }
+            });
+        });
+    }
+}
+
+impl WordGenApp {
     pub fn new(shared_data: &mut SharedData) -> Self {
         let mut result = Self::default();
         result.categories = try_categories_from_str(
@@ -484,7 +704,7 @@ fn display_word(ui: &mut egui::Ui, word: &Word, settings: &WordDisplaySettings) 
         }
         OutputStyle::SoundExplanation => {
             word.syllables.iter().for_each(|s| {
-                s.sounds.iter().for_each(|s| {
+                s.sounds().iter().for_each(|s| {
                     ui.label(s.display(settings.rewrite))
                         .on_hover_text(s.description_str());
                 })
@@ -498,7 +718,7 @@ fn display_word(ui: &mut egui::Ui, word: &Word, settings: &WordDisplaySettings) 
 
 fn display_syllable(ui: &mut egui::Ui, syllable: &Syllable, settings: &WordDisplaySettings) {
     let str = syllable
-        .sounds
+        .sounds()
         .iter()
         .map(|s| s.display(settings.rewrite))
         .collect::<Vec<_>>()
