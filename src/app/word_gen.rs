@@ -1,7 +1,5 @@
 use crate::app::{Categories, SharedData, SubApp};
-use crate::generation::{
-    generate_map, GenerationInstruction, GenerationInstructionRoot, GenerationSettings, WordGen,
-};
+use crate::generation::{generate_map, GenerationInstruction, GenerationInstructionRoot, GenerationResultType, GenerationSettings, WordGen};
 use crate::rewrite::RewriteRuleCollection;
 use crate::sounds::{Sound, SoundKind};
 use crate::word::{Syllable, Word};
@@ -11,6 +9,7 @@ use rand::thread_rng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Formatter;
+use std::thread;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -283,6 +282,125 @@ fn try_categories_from_str(
     Some(result)
 }
 
+impl WordGenApp {
+    fn generate_word_gen(&mut self, shared_data: &mut SharedData) -> WordGen {
+        let categories = match &self.categories {
+            None => {
+                let mut r = GenerationInstructionRoot::parse_all(
+                    &self.categories_str,
+                    &HashMap::new(),
+                    GenerationResultType::Sound
+                );
+                r.iter_mut().for_each(|c| match &c.instruction {
+                    GenerationInstruction::List(l) => {
+                        c.instruction = GenerationInstruction::Options(l.clone())
+                    }
+                    _ => {}
+                });
+                r
+            }
+
+            Some(c) => GenerationInstructionRoot::from_ipa_categories(&c),
+        };
+        let categories_map = generate_map(categories.clone(), GenerationResultType::Sound);
+        let syllables = if self.advanced {
+            let onset = GenerationInstructionRoot::parse_all_name_value(&self.onset_input.added, &categories_map, GenerationResultType::Unknown);
+            let onset_map = generate_map(onset.clone(), GenerationResultType::SyllablePart);
+            let nucleus = GenerationInstructionRoot::parse_all_name_value(&self.nucleus_input.added, &categories_map, GenerationResultType::Unknown);
+            let nucleus_map = generate_map(nucleus.clone(), GenerationResultType::SyllablePart);
+            let coda = GenerationInstructionRoot::parse_all_name_value(&self.coda_input.added, &categories_map, GenerationResultType::Unknown);
+            let coda_map = generate_map(coda.clone(), GenerationResultType::SyllablePart);
+            println!("{} - {} - {}", onset.len(), nucleus.len(), coda.len());
+            println!("{} - {} - {}", onset_map.len(), nucleus_map.len(), coda_map.len());
+            println!("{:?}", self.syllables_input.added.len());
+            self.syllables_input.added.clone().into_iter().map(|(name, o, n, c)| {
+                let onset = o.and_then(|name|  onset_map.get(&name).map(|i| {
+                    Box::new(GenerationInstructionRoot {
+                        name: Some(name),
+                        instruction: GenerationInstruction::Part(Box::new(i.clone())),
+                        result_type: GenerationResultType::SyllablePart,
+                    })
+                }));
+                let coda = c.and_then(|name|  coda_map.get(&name).map(|i| {
+                    Box::new(GenerationInstructionRoot {
+                        name: Some(name),
+                        instruction: GenerationInstruction::Part(Box::new(i.clone())),
+                        result_type: GenerationResultType::SyllablePart,
+                    })
+                }));
+                let nucleus_instruction = nucleus_map.get(&n).unwrap();
+                let nucleus = Box::new(
+                    GenerationInstructionRoot {
+                        name: Some(n),
+                        instruction: GenerationInstruction::Part(Box::new(nucleus_instruction.clone())),
+                        result_type: GenerationResultType::SyllablePart,
+                    }
+                );
+                GenerationInstructionRoot {
+                    name : Some(name.clone()),
+                    instruction: GenerationInstruction::Syllable(onset, nucleus, coda),
+                    result_type: GenerationResultType::Syllable,
+                }
+            }).collect::<Vec<_>>()
+        } else {
+            GenerationInstructionRoot::parse_all(&self.syllables_str, &categories_map, GenerationResultType::Syllable)
+        };
+        println!("{}", syllables.len());
+        let syllables_map = generate_map(syllables.clone(), GenerationResultType::Syllable);
+        let words =
+            GenerationInstructionRoot::parse_all(&self.words_str, &syllables_map, GenerationResultType::Word);
+        WordGen {
+            instructions: words,
+        }
+    }
+
+    fn generate_words(&mut self, shared_data: &mut SharedData) {
+        let word_gen = self.generate_word_gen(shared_data);
+        let settings = GenerationSettings {
+            deviation: if self.settings.variance >= 10. {
+                None
+            } else {
+                Some(self.settings.variance)
+            },
+        };
+        let amount = self.settings.amount;
+        let inner_word_gen = word_gen.clone();
+        let handle = thread::spawn(move || {
+            let settings= settings;
+            let word_gen = inner_word_gen;
+            (0..amount)
+                .map(|_| word_gen.generate(&mut thread_rng(), &settings))
+                .collect::<Vec<_>>()
+        });
+
+        let mut output = handle.join().unwrap();
+
+        match self.settings.sorting {
+            Sorting::None => {}
+            Sorting::Alphabetic => {
+                output.sort();
+            }
+            Sorting::AlphabeticRev => {
+                output.sort();
+                output.reverse();
+            }
+            Sorting::SyllableCount => {
+                output.sort_by(|a, b| a.syllables.len().cmp(&b.syllables.len()))
+            }
+            Sorting::SoundCount => {
+                fn count_sounds(word: &Word) -> usize {
+                    word.syllables.iter().map(|s| s.sounds().len()).sum()
+                }
+                output.sort_by(|a, b| count_sounds(a).cmp(&count_sounds(b)));
+            }
+        }
+        output
+            .iter_mut()
+            .for_each(|w| self.rewrite_rules.apply_to_word(w));
+        self.output = Some(output);
+    }
+}
+
 impl SubApp for WordGenApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(
@@ -310,6 +428,18 @@ impl SubApp for WordGenApp {
                 } else {
                     self.simple_input(ui, shared_data);
                 }
+
+                ui.separator();
+
+                ui.vertical(|ui| {
+                    ui.label("Rewrite Rules:");
+                    if ui.text_edit_multiline(&mut self.rewrites_str).changed() {
+                        if let Ok(rules) = RewriteRuleCollection::try_parse(&self.rewrites_str)
+                        {
+                            self.rewrite_rules = rules;
+                        }
+                    }
+                });
             });
 
         egui::SidePanel::left("buttons")
@@ -324,103 +454,7 @@ impl SubApp for WordGenApp {
                 ui.end_row();
 
                 if ui.add(Button::new("Generate Words!")).clicked() {
-                    let categories = match &self.categories {
-                        None => {
-                            let mut r = GenerationInstructionRoot::parse_all(
-                                &self.categories_str,
-                                &HashMap::new(),
-                            );
-                            r.iter_mut().for_each(|c| match &c.instruction {
-                                GenerationInstruction::List(l) => {
-                                    c.instruction = GenerationInstruction::Options(l.clone())
-                                }
-                                _ => {}
-                            });
-                            r
-                        }
-
-                        Some(c) => GenerationInstructionRoot::from_ipa_categories(&c),
-                    };
-                    let categories_map = generate_map(categories.clone());
-                    let syllables = if self.advanced {
-                        let onset = GenerationInstructionRoot::parse_all_name_value(&self.onset_input.added, &categories_map);
-                        let onset_map = generate_map(onset.clone());
-                        let nucleus = GenerationInstructionRoot::parse_all_name_value(&self.nucleus_input.added, &categories_map);
-                        let nucleus_map = generate_map(nucleus.clone());
-                        let coda = GenerationInstructionRoot::parse_all_name_value(&self.coda_input.added, &categories_map);
-                        let coda_map = generate_map(coda.clone());
-                        println!("ONC-Sizes: {} {} {}", onset.len(), nucleus.len(), coda.len());
-                        self.syllables_input.added.clone().into_iter().map(|(name, o, n, c)| {
-                            let onset = o.and_then(|name|  onset_map.get(&name).map(|i| {
-                                Box::new(GenerationInstructionRoot {
-                                    name: Some(name),
-                                    instruction: GenerationInstruction::Part(Box::new(i.clone())),
-                                    depth: 1,
-                                })
-                            }));
-                            let coda = c.and_then(|name|  coda_map.get(&name).map(|i| {
-                                Box::new(GenerationInstructionRoot {
-                                    name: Some(name),
-                                    instruction: GenerationInstruction::Part(Box::new(i.clone())),
-                                    depth: 1,
-                                })
-                            }));
-                            let nucleus_instruction = nucleus_map.get(&n).unwrap();
-                            let nucleus = Box::new(
-                                GenerationInstructionRoot {
-                                    name: Some(n),
-                                    instruction: GenerationInstruction::Part(Box::new(nucleus_instruction.clone())),
-                                    depth: 1,
-                                }
-                            );
-                            GenerationInstructionRoot {
-                                name : Some(name.clone()),
-                                instruction: GenerationInstruction::Syllable(onset, nucleus, coda),
-                                depth : 2,
-                            }
-                        }).collect::<Vec<_>>()
-                    } else {
-                            GenerationInstructionRoot::parse_all(&self.syllables_str, &categories_map)
-                    };
-                    let syllables_map = generate_map(syllables.clone());
-                    let words =
-                        GenerationInstructionRoot::parse_all(&self.words_str, &syllables_map);
-                    let word_gen = WordGen {
-                        instructions: words,
-                    };
-                    let settings = GenerationSettings {
-                        deviation: if self.settings.variance >= 10. {
-                            None
-                        } else {
-                            Some(self.settings.variance)
-                        },
-                    };
-                    let mut output = (0..self.settings.amount)
-                        .map(|_| word_gen.generate(&mut thread_rng(), &settings))
-                        .collect::<Vec<_>>();
-                    match self.settings.sorting {
-                        Sorting::None => {}
-                        Sorting::Alphabetic => {
-                            output.sort();
-                        }
-                        Sorting::AlphabeticRev => {
-                            output.sort();
-                            output.reverse();
-                        }
-                        Sorting::SyllableCount => {
-                            output.sort_by(|a, b| a.syllables.len().cmp(&b.syllables.len()))
-                        }
-                        Sorting::SoundCount => {
-                            fn count_sounds(word: &Word) -> usize {
-                                word.syllables.iter().map(|s| s.sounds().len()).sum()
-                            }
-                            output.sort_by(|a, b| count_sounds(a).cmp(&count_sounds(b)));
-                        }
-                    }
-                    output
-                        .iter_mut()
-                        .for_each(|w| self.rewrite_rules.apply_to_word(w));
-                    self.output = Some(output);
+                    self.generate_words(shared_data);
                 }
 
                 ui.horizontal_wrapped(|ui| {
@@ -661,15 +695,6 @@ impl WordGenApp {
                 ui.text_edit_multiline(&mut self.syllables_str);
             });
 
-            ui.vertical(|ui| {
-                ui.label("Rewrite Rules:");
-                if ui.text_edit_multiline(&mut self.rewrites_str).changed() {
-                    if let Ok(rules) = RewriteRuleCollection::try_parse(&self.rewrites_str)
-                    {
-                        self.rewrite_rules = rules;
-                    }
-                }
-            });
         });
     }
 }
@@ -717,17 +742,11 @@ fn display_word(ui: &mut egui::Ui, word: &Word, settings: &WordDisplaySettings) 
 }
 
 fn display_syllable(ui: &mut egui::Ui, syllable: &Syllable, settings: &WordDisplaySettings) {
-    let str = syllable
-        .sounds()
-        .iter()
-        .map(|s| s.display(settings.rewrite))
-        .collect::<Vec<_>>()
-        .join("");
+    let str = syllable.display(settings.rewrite);
     ui.label(str).on_hover_text(
         syllable
             .instruction
             .as_ref()
-            .and_then(|v| v.rsplit("=").next())
             .map(|v| v.to_string())
             .unwrap_or_default(),
     );

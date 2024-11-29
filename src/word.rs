@@ -15,6 +15,12 @@ impl PartialOrd for SyllablePart {
 }
 
 impl SyllablePart {
+    pub fn from_sound(sound: Sound) -> Self {
+        Self {
+            instruction: None,
+            sounds: vec![sound],
+        }
+    }
     pub fn display(&self, rewrite: bool) -> String {
         self.sounds
             .iter()
@@ -34,7 +40,21 @@ pub struct Syllable {
 }
 
 impl Syllable {
-    fn display(&self, rewrite: bool) -> String {
+    pub(crate) fn from_part(syllable_part: SyllablePart) -> Self {
+        Self {
+            instruction: None,
+            onset: None,
+            nucleus: syllable_part,
+            coda: None,
+            simple: true,
+        }
+    }
+
+    pub(crate) fn from_sound(sound: Sound) -> Self {
+        Self::from_part(SyllablePart::from_sound(sound))
+    }
+
+    pub(crate) fn display(&self, rewrite: bool) -> String {
         format!(
             "{}{}{}",
             self.onset
@@ -93,7 +113,7 @@ pub struct Word {
 
 impl PartialOrd for Word {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.syllables.partial_cmp(&other.syllables)
+        self.to_string().partial_cmp(&other.to_string())
     }
 }
 
