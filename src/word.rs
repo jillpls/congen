@@ -1,8 +1,10 @@
+use crate::rewrite::RewriteRule;
 use crate::sounds::Sound;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug, Clone, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, Serialize, Deserialize)]
 pub struct SyllablePart {
     pub(crate) instruction: Option<String>,
     pub(crate) sounds: Vec<Sound>,
@@ -30,7 +32,7 @@ impl SyllablePart {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, Serialize, Deserialize)]
 pub struct Syllable {
     pub(crate) instruction: Option<String>,
     pub(crate) onset: Option<SyllablePart>,
@@ -75,7 +77,7 @@ impl Syllable {
             result.append(&mut o.sounds.iter().collect::<Vec<_>>());
         }
         result.append(&mut self.nucleus.sounds.iter().collect::<Vec<_>>());
-        if let Some(o) = &self.onset {
+        if let Some(o) = &self.coda {
             result.append(&mut o.sounds.iter().collect::<Vec<_>>());
         }
         result
@@ -105,10 +107,11 @@ impl PartialOrd for Syllable {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, Serialize, Deserialize)]
 pub struct Word {
     pub(crate) instruction: Option<String>,
     pub(crate) syllables: Vec<Syllable>,
+    pub(crate) rewrite_rules: Vec<RewriteRule>,
 }
 
 impl PartialOrd for Word {
@@ -118,15 +121,27 @@ impl PartialOrd for Word {
 }
 
 impl Word {
+    pub fn export(&self) -> Vec<String> {
+        vec![
+            self.display(false),
+            self.display(true),
+            self.instruction.clone().unwrap_or_default(),
+        ]
+    }
+
     pub fn display(&self, rewrite: bool) -> String {
-        format!(
-            "{}",
-            self.syllables
-                .iter()
-                .map(|s| { s.display(rewrite) })
-                .collect::<Vec<_>>()
-                .join("")
-        )
+        let mut r = self
+            .syllables
+            .iter()
+            .map(|s| s.display(rewrite))
+            .collect::<Vec<_>>()
+            .join("");
+        if rewrite {
+            for rule in &self.rewrite_rules {
+                r = rule.apply_to_str(&r);
+            }
+        }
+        format!("{}", r)
     }
 }
 

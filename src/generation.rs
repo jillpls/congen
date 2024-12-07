@@ -29,38 +29,32 @@ pub enum GenerationResultType {
     SyllablePart,
     Syllable,
     Word,
-    Unknown
-}
-
-#[derive(Debug, Clone)]
-pub enum GenerationResult {
-    Sound(Sound),
-    SyllablePart(SyllablePart),
-    Syllable(Syllable),
-    Word(Word)
+    Unknown,
 }
 
 impl Display for GenerationResultType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            GenerationResultType::Sound => { "Sound"}
-            GenerationResultType::SyllablePart => { "SyllablePart"}
-            GenerationResultType::Syllable => { "Syllable"}
-            GenerationResultType::Word => { "Word"}
-            GenerationResultType::Unknown => { "Unknown"}
-        })
-    }
-}
-
-impl GenerationResultType {
-    fn get_lower(&self) -> Self {
-        match self {
-            GenerationResultType::Sound => { Self::Sound }
-            GenerationResultType::SyllablePart => { Self::Sound}
-            GenerationResultType::Syllable => { Self::SyllablePart }
-            GenerationResultType::Word => { Self::Syllable }
-            GenerationResultType::Unknown => { Self::Unknown }
-        }
+        write!(
+            f,
+            "{}",
+            match self {
+                GenerationResultType::Sound => {
+                    "Sound"
+                }
+                GenerationResultType::SyllablePart => {
+                    "SyllablePart"
+                }
+                GenerationResultType::Syllable => {
+                    "Syllable"
+                }
+                GenerationResultType::Word => {
+                    "Word"
+                }
+                GenerationResultType::Unknown => {
+                    "Unknown"
+                }
+            }
+        )
     }
 }
 
@@ -68,7 +62,7 @@ impl GenerationResultType {
 pub struct GenerationInstructionRoot {
     pub(crate) name: Option<String>,
     pub(crate) instruction: GenerationInstruction,
-    pub(crate) result_type : GenerationResultType
+    pub(crate) result_type: GenerationResultType,
 }
 
 impl Display for GenerationInstructionRoot {
@@ -84,7 +78,7 @@ impl Display for GenerationInstructionRoot {
 
 pub fn generate_map(
     instructions: Vec<GenerationInstructionRoot>,
-    result_type: GenerationResultType
+    result_type: GenerationResultType,
 ) -> HashMap<String, GenerationInstructionInner> {
     let mut map: HashMap<String, GenerationInstruction> = HashMap::new();
     let mut artificials = HashSet::new();
@@ -117,9 +111,10 @@ pub fn generate_map(
 }
 
 impl GenerationInstructionRoot {
+    #[allow(unused)]
     pub fn gen_str(&self, depth: usize) -> String {
         let str = self.instruction.gen_str(depth);
-        format!("\n{}{}", vec![" "; depth*2].join(""), str)
+        format!("\n{}{}", vec![" "; depth * 2].join(""), str)
     }
 
     pub fn shallow_generate<R: Rng>(
@@ -153,7 +148,7 @@ impl GenerationInstructionRoot {
     pub fn parse_all(
         input: &str,
         lookup: &HashMap<String, GenerationInstructionInner>,
-        result_type: GenerationResultType
+        result_type: GenerationResultType,
     ) -> Vec<Self> {
         let sets: Vec<_> = input.split("\n").map(|i| i.split(';')).flatten().collect();
         sets.into_iter()
@@ -161,25 +156,42 @@ impl GenerationInstructionRoot {
             .collect()
     }
 
-    pub(crate) fn parse_all_name_value(input: &Vec<(String, String)>, lookup: &HashMap<String, GenerationInstructionInner>, result_type: GenerationResultType) -> Vec<Self> {
-        input.iter().filter_map(|(n, v)| {
-            GenerationInstructionRoot::try_parse_name_value(Some(n.clone()), v, lookup, result_type).ok()
-        }).collect::<Vec<_>>()
+    pub(crate) fn parse_all_name_value(
+        input: &Vec<(String, String)>,
+        lookup: &HashMap<String, GenerationInstructionInner>,
+        result_type: GenerationResultType,
+    ) -> Vec<Self> {
+        input
+            .iter()
+            .filter_map(|(n, v)| {
+                GenerationInstructionRoot::try_parse_name_value(
+                    Some(n.clone()),
+                    v,
+                    lookup,
+                    result_type,
+                )
+                .ok()
+            })
+            .collect::<Vec<_>>()
     }
 
-    pub fn try_parse_name_value(name: Option<String>, value: &str, lookup: &HashMap<String, GenerationInstructionInner>, result_type: GenerationResultType) -> ConGenResult<Self> {
-
+    pub fn try_parse_name_value(
+        name: Option<String>,
+        value: &str,
+        lookup: &HashMap<String, GenerationInstructionInner>,
+        result_type: GenerationResultType,
+    ) -> ConGenResult<Self> {
         Ok(Self {
             name,
             instruction: GenerationInstruction::try_parse(value, lookup)?,
-            result_type
+            result_type,
         })
     }
 
     pub fn try_parse(
         input: &str,
         lookup: &HashMap<String, GenerationInstructionInner>,
-        result_type: GenerationResultType
+        result_type: GenerationResultType,
     ) -> ConGenResult<Self> {
         let split = input.splitn(2, '=').collect::<Vec<_>>();
         if split.len() > 2 || split.is_empty() {
@@ -252,12 +264,11 @@ impl Display for GenerationInstruction {
 const RESERVED: [char; 9] = ['(', ')', '[', ']', '\\', '=', '*', '{', '}'];
 
 impl GenerationInstruction {
+    #[allow(unused)]
     pub fn gen_str(&self, depth: usize) -> String {
         match self {
-            GenerationInstruction::Part(p) => {
-                p.gen_str(depth)
-            }
-            _ => { self.to_string() }
+            GenerationInstruction::Part(p) => p.gen_str(depth),
+            _ => self.to_string(),
         }
     }
 
@@ -476,12 +487,11 @@ pub enum GenerationInstructionInner {
 }
 
 impl GenerationInstructionInner {
+    #[allow(unused)]
     pub fn gen_str(&self, depth: usize) -> String {
         match self {
-            GenerationInstructionInner::LowerLevel(l) => {
-                l.gen_str(depth+1)
-            }
-            _ => { self.to_string() }
+            GenerationInstructionInner::LowerLevel(l) => l.gen_str(depth + 1),
+            _ => self.to_string(),
         }
     }
     pub fn shallow_generate(&self) -> ShallowGenResult<'_> {
@@ -523,11 +533,21 @@ pub enum ShallowGenResult<'a> {
 
 impl Display for ShallowGenResult<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", match self {
-            ShallowGenResult::Sound(_) => { "Sound" }
-            ShallowGenResult::Instruction(_) => { "Instruction"}
-            ShallowGenResult::Syllable(_, _, _) => { "Syllable" }
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                ShallowGenResult::Sound(_) => {
+                    "Sound"
+                }
+                ShallowGenResult::Instruction(_) => {
+                    "Instruction"
+                }
+                ShallowGenResult::Syllable(_, _, _) => {
+                    "Syllable"
+                }
+            }
+        )
     }
 }
 
@@ -537,9 +557,13 @@ pub struct WordGen {
 }
 
 impl WordGen {
-    fn generate_sound<R: Rng>(rng: &mut R, settings: &GenerationSettings, shallow_gen_result: &ShallowGenResult) -> Sound {
+    fn generate_sound<R: Rng>(
+        rng: &mut R,
+        settings: &GenerationSettings,
+        shallow_gen_result: &ShallowGenResult<'_>,
+    ) -> Sound {
         match shallow_gen_result {
-            ShallowGenResult::Sound(s) => { (*s).clone()}
+            ShallowGenResult::Sound(s) => (*s).clone(),
             ShallowGenResult::Instruction(i) => {
                 i.instruction.generate_sound(rng, settings).unwrap() // TODO
             }
@@ -549,7 +573,11 @@ impl WordGen {
         }
     }
 
-    fn generate_syllable_part_option<R: Rng>(rng: &mut R, settings: &GenerationSettings, instruction: &Option<&Box<GenerationInstructionRoot>>) -> Option<SyllablePart> {
+    fn generate_syllable_part_option<R: Rng>(
+        rng: &mut R,
+        settings: &GenerationSettings,
+        instruction: &Option<&Box<GenerationInstructionRoot>>,
+    ) -> Option<SyllablePart> {
         instruction.and_then(|i| {
             let part = Self::generate_syllable_part(rng, settings, i);
             if part.sounds.is_empty() {
@@ -560,22 +588,33 @@ impl WordGen {
         })
     }
 
-    fn generate_syllable_part<R: Rng>(rng: &mut R, settings: &GenerationSettings, instruction: &GenerationInstructionRoot) -> SyllablePart {
+    fn generate_syllable_part<R: Rng>(
+        rng: &mut R,
+        settings: &GenerationSettings,
+        instruction: &GenerationInstructionRoot,
+    ) -> SyllablePart {
         let shallow = instruction.shallow_generate(rng, settings);
         let mut sounds = vec![];
         for r in shallow {
             match &r {
-                ShallowGenResult::Sound(_) => { sounds.push(Self::generate_sound(rng, settings, &r));}
-                ShallowGenResult::Instruction(i) => {
-                    match i.result_type {
-                        GenerationResultType::Sound => { sounds.push(Self::generate_sound(rng, settings, &r)) }
-                        GenerationResultType::SyllablePart => { let part = Self::generate_syllable_part(rng, settings, i);
-                            return part;
-                        }
-                        _ => {todo!() }
-                    }
+                ShallowGenResult::Sound(_) => {
+                    sounds.push(Self::generate_sound(rng, settings, &r));
                 }
-                ShallowGenResult::Syllable(_, _, _) => { todo!() }
+                ShallowGenResult::Instruction(i) => match i.result_type {
+                    GenerationResultType::Sound => {
+                        sounds.push(Self::generate_sound(rng, settings, &r))
+                    }
+                    GenerationResultType::SyllablePart => {
+                        let part = Self::generate_syllable_part(rng, settings, i);
+                        return part;
+                    }
+                    _ => {
+                        todo!()
+                    }
+                },
+                ShallowGenResult::Syllable(_, _, _) => {
+                    todo!()
+                }
             }
         }
         SyllablePart {
@@ -584,38 +623,61 @@ impl WordGen {
         }
     }
 
-    fn generate_syllable<R: Rng>(rng: &mut R, settings: &GenerationSettings, shallow_gen_result: &ShallowGenResult) -> Syllable {
+    fn generate_syllable<R: Rng>(
+        rng: &mut R,
+        settings: &GenerationSettings,
+        shallow_gen_result: &ShallowGenResult<'_>,
+    ) -> Syllable {
         match shallow_gen_result {
-            ShallowGenResult::Sound(s) => {
-                Syllable::from_sound((*s).clone())
-            }
+            ShallowGenResult::Sound(s) => Syllable::from_sound((*s).clone()),
             ShallowGenResult::Instruction(i) => {
                 let shallow = i.shallow_generate(rng, settings);
 
                 match &i.result_type {
                     GenerationResultType::Sound => {
-                        let sounds = shallow.into_iter().map(|i|
-                        Self::generate_sound(rng, settings, &i)
-                        ).collect();
-                        Syllable::from_part(SyllablePart { instruction: Some(i.to_string()), sounds })
+                        let sounds = shallow
+                            .into_iter()
+                            .map(|i| Self::generate_sound(rng, settings, &i))
+                            .collect();
+                        Syllable::from_part(SyllablePart {
+                            instruction: Some(i.to_string()),
+                            sounds,
+                        })
                     }
                     GenerationResultType::Syllable => {
                         if shallow.len() != 1 {
-                            todo!()
+                            let sounds = shallow
+                                .into_iter()
+                                .map(|s| Self::generate_sound(rng, settings, &s))
+                                .collect::<_>();
+                            Syllable {
+                                instruction: None,
+                                onset: None,
+                                nucleus: SyllablePart {
+                                    instruction: None,
+                                    sounds,
+                                },
+                                coda: None,
+                                simple: true,
+                            }
+                        } else {
+                            Self::generate_syllable(rng, settings, &shallow[0])
                         }
-                        Self::generate_syllable(rng, settings, &shallow[0])
                     }
-                    _ => { todo!() }
+                    _ => {
+                        todo!()
+                    }
                 }
-
             }
             ShallowGenResult::Syllable(o, n, c) => {
                 let onset = Self::generate_syllable_part_option(rng, settings, o);
-                let nucleus= Self::generate_syllable_part(rng, settings, n);
+                let nucleus = Self::generate_syllable_part(rng, settings, n);
                 let coda = Self::generate_syllable_part_option(rng, settings, c);
                 let instruction = vec![onset.as_ref(), Some(&nucleus), coda.as_ref()]
                     .into_iter()
-                    .filter_map(|v| v.and_then(|p| p.instruction.as_ref().map(|v| v.to_string()))).collect::<Vec<_>>().join("-");
+                    .filter_map(|v| v.and_then(|p| p.instruction.as_ref().map(|v| v.to_string())))
+                    .collect::<Vec<_>>()
+                    .join("-");
                 Syllable {
                     instruction: Some(instruction),
                     onset,
@@ -624,14 +686,18 @@ impl WordGen {
                     simple: false,
                 }
             }
-
         }
     }
 
-    fn generate_syllables<R: Rng>(rng: &mut R, settings: &GenerationSettings, shallow_gen_results: &[ShallowGenResult]) -> Vec<Syllable> {
-        shallow_gen_results.iter().map(|r| {
-            Self::generate_syllable(rng, settings, r)
-        }).collect()
+    fn generate_syllables<R: Rng>(
+        rng: &mut R,
+        settings: &GenerationSettings,
+        shallow_gen_results: &[ShallowGenResult<'_>],
+    ) -> Vec<Syllable> {
+        shallow_gen_results
+            .iter()
+            .map(|r| Self::generate_syllable(rng, settings, r))
+            .collect()
     }
 
     pub(crate) fn generate<R: Rng>(&self, rng: &mut R, settings: &GenerationSettings) -> Word {
@@ -641,6 +707,7 @@ impl WordGen {
         Word {
             instruction: Some(i.to_string()),
             syllables,
+            rewrite_rules: vec![],
         }
     }
 }

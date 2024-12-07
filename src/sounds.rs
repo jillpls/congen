@@ -1,4 +1,4 @@
-#[derive(Debug, Default, Eq, PartialEq, Clone, Hash, Ord)]
+#[derive(Debug, Default, Eq, PartialEq, Clone, Hash, Ord, Serialize, Deserialize)]
 pub struct Sound {
     pub(crate) representation: String,
     pub(crate) description: SoundKind,
@@ -43,10 +43,10 @@ impl Sound {
     pub fn description_str(&self) -> String {
         match &self.description {
             SoundKind::Vowel(v) => {
-                format!("{} consonant", v.to_string())
+                format!("{} vowel", v.to_string())
             }
             SoundKind::Consonant(c) => {
-                format!("{} vowel", c.to_string())
+                format!("{} consonant", c.to_string())
             }
             SoundKind::Custom => {
                 format!("custom sound ({})", self.representation)
@@ -122,7 +122,7 @@ impl Sound {
     }
 }
 
-#[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Hash)]
+#[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Hash, Serialize, Deserialize)]
 pub enum SoundKind {
     Vowel(Vowel),
     Consonant(Consonant),
@@ -130,10 +130,10 @@ pub enum SoundKind {
     Custom,
 }
 
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::io;
-use std::path::Path;
 pub use vowels::*;
 
 pub fn parse_csv_to_map<R: io::Read>(reader: R) -> Vec<HashMap<String, String>> {
@@ -155,6 +155,7 @@ mod vowels {
     use crate::sounds::{parse_csv_to_map, Sound, SoundKind};
     use crate::ConGenError::GenericParseError;
     use crate::ConGenResult;
+    use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::fmt::{Display, Formatter};
     use std::io;
@@ -168,7 +169,7 @@ mod vowels {
         sounds
     }
 
-    #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Hash)]
+    #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Hash, Serialize, Deserialize)]
     pub struct Vowel {
         pub(crate) height: Height,
         pub(crate) backness: Backness,
@@ -224,7 +225,7 @@ mod vowels {
         }
     }
 
-    #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Hash)]
+    #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Hash, Serialize, Deserialize)]
     pub enum Height {
         Close,
         NearClose,
@@ -271,7 +272,7 @@ mod vowels {
         }
     }
 
-    #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Hash)]
+    #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Hash, Serialize, Deserialize)]
     pub enum Backness {
         Front,
         NearFront,
@@ -312,7 +313,7 @@ mod vowels {
         }
     }
 
-    #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Hash)]
+    #[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Hash, Serialize, Deserialize)]
     pub enum Roundedness {
         Unrounded,
         Rounded,
@@ -352,13 +353,14 @@ mod consonants {
     use crate::ConGenError::GenericParseError;
     use crate::{ConGenError, ConGenResult};
     use itertools::Itertools;
+    use serde::{Deserialize, Serialize};
     use smallvec::{smallvec, SmallVec};
     use std::cmp::Ordering;
     use std::collections::HashMap;
     use std::fmt::{Display, Formatter};
     use std::io;
-    use std::path::Path;
     use strum_macros::EnumIter;
+    use crate::sounds::Manner::Ejective;
 
     pub fn parse_consonants<R: io::Read>(input: R) -> Vec<Sound> {
         let records = parse_csv_to_map(input);
@@ -369,7 +371,7 @@ mod consonants {
         sounds
     }
 
-    #[derive(Debug, Clone, Eq, Hash, PartialEq, Ord)]
+    #[derive(PartialEq, Eq, Ord, Hash, Clone, Default, Debug, Serialize, Deserialize)]
     pub struct Manners {
         pub(crate) inner: SmallVec<[Manner; 4]>,
     }
@@ -402,8 +404,11 @@ mod consonants {
         }
     }
 
-    #[derive(Debug, Clone, Eq, Hash, PartialEq, Ord)]
+    #[derive(Debug, Clone, Eq, Hash, PartialEq, Ord, Serialize, Deserialize)]
     pub struct Consonant {
+        pub pulmonic: bool,
+        pub co_articulated: bool,
+        pub uvular: bool,
         pub(crate) voice: Option<Voice>,
         pub(crate) place: Place,
         pub(crate) manners: Manners,
@@ -459,6 +464,39 @@ mod consonants {
         }
     }
 
+    pub fn contains_order(a: &Manners, b: &Manners, to_check: Manner) -> Option<Ordering> {
+        let a = a.contains(&to_check);
+        let b = b.contains(&to_check);
+        match (a, b) {
+            (true, false) => Some(Ordering::Less),
+            (false, true) => Some(Ordering::Greater),
+            _ => None
+        }
+    }
+
+    pub fn cmp_non_pulmonic(a: &Manners, b: &Manners) -> Ordering {
+        match (a.contains(&Ejective), b.contains(&Ejective)) {
+            (true, false) => return Ordering::Less,
+            (false, true) => return Ordering::Greater,
+            _ => (),
+        }
+        match (a.contains(&Manner::Click), b.contains(&Manner::Click)) {
+            (true, false) => return Ordering::Less,
+            (false, true) => return Ordering::Greater,
+            _ => (),
+        }
+
+        if let Some(o) = contains_order(a, b, Manner::Stop) { return o; }
+        if let Some(o) = contains_order(b, a, Manner::Lateral) { return o; }
+        if let Some(o) = contains_order(a, b, Manner::Affricate) { return o; }
+        if let Some(o) = contains_order(a, b, Manner::Fricative) { return o; }
+        if let Some(o) = contains_order(a, b, Manner::Tenuis) { return o; }
+        if let Some(o) = contains_order(a, b, Manner::Voiced) { return o; }
+        if let Some(o) = contains_order(a, b, Manner::Nasal) { return o; }
+
+        Ordering::Equal
+    }
+
     impl Consonant {
         pub fn try_from_map(map: HashMap<String, String>) -> ConGenResult<Sound> {
             let voice = map
@@ -486,6 +524,9 @@ mod consonants {
                 ));
             };
             let consonant = Self {
+                pulmonic: true,
+                co_articulated: false,
+                uvular: false,
                 voice,
                 place,
                 manners: Manners { inner: manners },
@@ -493,7 +534,9 @@ mod consonants {
             let representation = map
                 .get("symbol")
                 .ok_or(GenericParseError("No symbol defined".to_string()))?
-                .to_owned();
+                .to_owned()
+                .trim()
+                .to_string();
             let complexity = map
                 .get("complexity")
                 .map(|c| c.parse::<usize>().ok())
@@ -509,9 +552,12 @@ mod consonants {
 
         pub fn new_base(place: Place, manner: Manner) -> Self {
             Self {
+                pulmonic: true,
+                co_articulated: false,
                 place,
                 manners: Manners::single(manner),
                 voice: None,
+                uvular: false,
             }
         }
 
@@ -528,11 +574,14 @@ mod consonants {
 
         pub fn new(place: Place, manner: &[Manner], voice: Option<Voice>) -> Self {
             Self {
+                pulmonic: true,
+                co_articulated: false,
                 place,
                 manners: Manners {
                     inner: manner.into(),
                 },
                 voice,
+                uvular: false,
             }
         }
     }
@@ -557,7 +606,9 @@ mod consonants {
         }
     }
 
-    #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Hash, EnumIter)]
+    #[derive(
+        Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Hash, EnumIter, Serialize, Deserialize,
+    )]
     pub enum Place {
         Bilabial,
         Labiodental,
@@ -571,9 +622,19 @@ mod consonants {
         Uvular,
         PharyngealEppiglotal,
         Glottal,
+        LabialAlveolar,
+        LabialRetroflex,
+        LabialPalatal,
+        LabialVelar,
+        LabialUvular,
+        PalatalVelar,
+        UvularEpiglottal,
+        VelarizedAlveolar,
     }
 
-    #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Hash)]
+    #[derive(
+        Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Hash, EnumIter, Serialize, Deserialize,
+    )]
     pub enum Voice {
         Voiceless,
         Voiced,
@@ -650,6 +711,30 @@ mod consonants {
                     Place::Glottal => {
                         "glottal"
                     }
+                    Place::LabialVelar => {
+                        "labial-velar"
+                    }
+                    Place::LabialAlveolar => {
+                        "labial-alveolar"
+                    }
+                    Place::LabialRetroflex => {
+                        "labial-retroflex"
+                    }
+                    Place::LabialPalatal => {
+                        "labial-palatal"
+                    }
+                    Place::LabialUvular => {
+                        "labial-uvular"
+                    }
+                    Place::PalatalVelar => {
+                        "palatal-velar"
+                    }
+                    Place::UvularEpiglottal => {
+                        "uvular-epiglottal"
+                    }
+                    Place::VelarizedAlveolar => {
+                        "velarized alveolar"
+                    }
                 }
             )
         }
@@ -671,13 +756,25 @@ mod consonants {
                 "uvular" => Self::Uvular,
                 "pharyngeal/epiglottal" => Self::PharyngealEppiglotal,
                 "glottal" => Self::Glottal,
+                "labial-velar" => Self::LabialVelar,
+                "labial-uvular" => Self::LabialUvular,
+                "labial-retroflex" => Self::LabialRetroflex,
+                "labial-palatal" => Self::LabialPalatal,
+                "labial-alveolar" => Self::LabialAlveolar,
+                "uvular-epiglottal" => Self::UvularEpiglottal,
+                "palatal-velar" => Self::PalatalVelar,
+                "velarized alveolar" => Self::VelarizedAlveolar,
                 _ => return Err(()),
             })
         }
     }
 
-    #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Hash)]
+    #[derive(
+        Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Hash, EnumIter, Serialize, Deserialize,
+    )]
     pub enum Manner {
+        Voiced,
+        Lateral,
         Sibilant,
         NonSibilant,
         Nasal,
@@ -685,7 +782,6 @@ mod consonants {
         Click,
         Plosive,
         Implosive,
-        Lateral,
         Affricate,
         Fricative,
         Approximant,
@@ -693,6 +789,7 @@ mod consonants {
         Trill,
         Tenuis,
         Stop,
+        Uvular,
     }
 
     impl std::fmt::Display for Manner {
@@ -746,6 +843,12 @@ mod consonants {
                     Manner::Stop => {
                         "stop"
                     }
+                    Manner::Uvular => {
+                        "uvular"
+                    }
+                    _ => {
+                        "voiced"
+                    }
                 }
             )
         }
@@ -771,6 +874,8 @@ mod consonants {
                 "tenuis" => Manner::Tenuis,
                 "implosive" => Manner::Implosive,
                 "stop" => Manner::Stop,
+                "uvular" => Manner::Uvular,
+                "voiced" => Manner::Voiced,
                 _ => return Err(()),
             })
         }

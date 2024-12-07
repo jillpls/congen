@@ -1,22 +1,28 @@
-use crate::app::SubApp;
+use std::arch::x86_64::__cpuid;
+use crate::app::{Categories, SubApp};
 use crate::app::{extract_sound_by_representation, SharedData};
-use crate::sounds::{parse_consonants, Place, Sound, SoundKind};
+use crate::sounds::{parse_consonants, Manner, Place, Sound, SoundKind, Consonant, cmp_non_pulmonic};
 use crate::sounds::{
     parse_vowels, partial_cmp_manners, Backness, Height, Manners, Roundedness, Voice,
 };
 use eframe::emath::Vec2;
-use egui::ScrollArea;
+use egui::{Order, ScrollArea};
 use egui::{Context, Ui};
 use egui_extras::TableBuilder;
 use egui_extras::{Column, Size, StripBuilder};
 use itertools::Itertools;
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
-use strum::IntoEnumIterator;
 use uuid::Uuid;
 
-#[derive(Default)]
+#[derive(Serialize, Deserialize)]
+pub struct IpaSave {
+    pub(crate) app: IpaApp,
+}
+
+#[derive(Default, Debug, Serialize, Deserialize, Clone)]
 struct SelectedSounds {
     map: HashMap<Uuid, bool>,
     changed: bool,
@@ -48,7 +54,14 @@ impl SelectedSounds {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Serialize, Deserialize)]
+pub struct Consonants {
+    pulmonic: ConsonantLookups,
+    non_pulmonic: ConsonantLookups,
+    co_articulated: (Vec<(String, Vec<Uuid>)>, Vec<(String, Vec<Uuid>)>),
+}
+
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct ConsonantLookups {
     places: Vec<Place>,
     by_manners: HashMap<Manners, HashMap<Place, Vec<Uuid>>>,
@@ -56,7 +69,7 @@ pub struct ConsonantLookups {
     empty_rows: HashMap<Manners, bool>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct VowelLookups {
     backness: Vec<Backness>,
     by_height: HashMap<Height, HashMap<Backness, Vec<Uuid>>>,
@@ -64,11 +77,11 @@ pub struct VowelLookups {
     empty_rows: HashMap<Height, bool>,
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 pub struct IpaApp {
     sounds: HashMap<Uuid, Sound>,
     selected: SelectedSounds,
-    consonant_lookups: ConsonantLookups,
+    consonants: Consonants,
     vowel_lookups: VowelLookups,
     settings: IpaAppSettings,
 }
@@ -84,8 +97,8 @@ fn filter_deref_vec<'a, F: FnMut(&(&Uuid, &Sound)) -> bool>(
         .collect()
 }
 
-#[derive(Default)]
-struct IpaAppSettings {
+#[derive(Default, Clone, Serialize, Deserialize)]
+pub struct IpaAppSettings {
     lock_all_tables: bool,
     locked_tables: HashSet<String>,
     editing_tables: HashSet<String>,
@@ -108,9 +121,41 @@ impl IpaApp {
             .sorted_by(|a, b| self.sounds.get(a).unwrap().cmp(self.sounds.get(b).unwrap()))
             .collect::<Vec<_>>();
         let consonants = filter_deref_vec(sounds.iter(), |(_, s)| s.is_consonant(), &self.sounds);
+        let pulmonic = filter_deref_vec(consonants.iter(), |(_, s)| match &s.description {
+            SoundKind::Consonant(c) => c.pulmonic,
+            _ => false
+        }, &self.sounds);
+        let non_pulmonic = filter_deref_vec(consonants.iter(), |(_, s)| match &s.description {
+            SoundKind::Consonant(c) => !c.pulmonic,
+            _ => false
+        }, &self.sounds);
+        let ejectives = filter_deref_vec(consonants.iter(), |(_,s)| {
+            match &s.description {
+                SoundKind::Consonant(c) => {
+                    c.manners.contains(&Manner::Ejective)
+                }
+                _ => false
+            }
+        }, &self.sounds);
+        let clicks = filter_deref_vec(consonants.iter(), |(_,s)| {
+            match &s.description {
+                SoundKind::Consonant(c) => {
+                    c.manners.contains(&Manner::Click)
+                }
+                _ => false
+            }
+        }, &self.sounds);
+        let implosives = filter_deref_vec(consonants.iter(), |(_,s)| {
+            match &s.description {
+                SoundKind::Consonant(c) => {
+                    c.manners.contains(&Manner::Implosive)
+                }
+                _ => false
+            }
+        }, &self.sounds);
         let non_glottal =
-            filter_deref_vec(consonants.iter(), |(_, s)| !s.is_glottal(), &self.sounds);
-        let glottal = filter_deref_vec(consonants.iter(), |(_, s)| s.is_glottal(), &self.sounds);
+            filter_deref_vec(pulmonic.iter(), |(_, s)| !s.is_glottal(), &self.sounds);
+        let glottal = filter_deref_vec(pulmonic.iter(), |(_, s)| s.is_glottal(), &self.sounds);
         let nasals = filter_deref_vec(non_glottal.iter(), |(_, s)| s.is_nasal(), &self.sounds);
         let plosives = filter_deref_vec(non_glottal.iter(), |(_, s)| s.is_plosive(), &self.sounds);
         let fricative_affricates = filter_deref_vec(
@@ -120,12 +165,16 @@ impl IpaApp {
         );
         let attl = filter_deref_vec(non_glottal.iter(), |(_, s)| s.is_attl(), &self.sounds);
         let vowels = filter_deref_vec(sounds.iter(), |(_, s)| s.is_vowel(), &self.sounds);
-        let consonants = ("C", consonants);
+        let consonants = ("C", pulmonic);
         let glottal = ("H", glottal);
         let nasal = ("N", nasals);
         let plosives = ("P", plosives);
         let fricative_affricates = ("F", fricative_affricates);
         let attl = ("R", attl);
+        let ejectives= ("E", ejectives);
+        let clicks = ("K", clicks);
+        let implosives = ("I", implosives);
+        let non_pulmonic = ("Q", non_pulmonic);
         let vowels = ("V", vowels);
         let list = vec![
             vowels,
@@ -135,6 +184,10 @@ impl IpaApp {
             fricative_affricates,
             glottal,
             attl,
+            non_pulmonic,
+            ejectives,
+            clicks,
+            implosives,
         ];
         shared_data.categories = list
             .into_iter()
@@ -153,8 +206,77 @@ impl IpaApp {
             .collect()
     }
 
-    fn import_consonants(&mut self) -> ConsonantLookups {
-        let mut consonants = parse_consonants(crate::raw_data::PULMONIC_CONSONANTS.as_bytes()); // TODO: inline for web
+    fn import_co_articulated(&mut self) -> (Vec<(String, Vec<Uuid>)>, Vec<(String, Vec<Uuid>)>) {
+        let consonants = parse_consonants(crate::raw_data::CO_ARTICULATED_CONSONANTS.as_bytes());
+        let consonants = consonants.into_iter().map(|mut c| {
+            let desc = match c.description {
+                SoundKind::Consonant(mut c) => {
+                    c.co_articulated = true;
+                    SoundKind::Consonant(c)
+                }
+                _ => c.description
+            };
+            c.description = desc;
+            c
+        });
+        let mut nasal = vec![];
+        let mut plosive = vec![];
+        let mut fricative = vec![];
+        let mut lateral_approximant = vec![];
+        let mut implosive = vec![];
+        let mut ejective = vec![];
+        let mut misc = vec![];
+        for c in consonants {
+            let id = Uuid::new_v4();
+            self.sounds.insert(id, c.clone());
+            if let SoundKind::Consonant(c) = c.description {
+                if c.manners.contains(&Manner::Nasal) {
+                    nasal.push(id);
+                } else if c.manners.contains(&Manner::Plosive) {
+                    plosive.push(id);
+                } else if c.manners.contains(&Manner::Fricative) {
+                    fricative.push(id);
+                } else if c.manners.contains(&Manner::Lateral) && c.manners.contains(&Manner::Approximant) {
+                    lateral_approximant.push(id);
+                } else if c.manners.contains(&Manner::Implosive) {
+                    implosive.push(id);
+                } else if c.manners.contains(&Manner::Ejective) {
+                    ejective.push(id);
+                } else {
+                    misc.push(id);
+                }
+            }
+        }
+        let left = vec![("nasal".to_string(), nasal), ("plosive".to_string(), plosive)];
+        let right = vec![
+            ("fricative/approximant".to_string(), fricative),
+            ("lateral approximant".to_string(), lateral_approximant),
+            ("implosive".to_string(), implosive),
+            ("ejective".to_string(), ejective),
+            ("other".to_string(), misc)
+        ];
+        (left, right)
+    }
+
+    fn import_consonants(&mut self, data: &[u8], pulmonic: bool) -> ConsonantLookups {
+        let consonants = parse_consonants(data);
+        let consonants = consonants.into_iter().map(|mut c| {
+            let desc = match c.description {
+                SoundKind::Consonant(mut c) => {
+                    c.pulmonic = pulmonic;
+                    if !pulmonic {
+                        if let Some(index) = c.manners.inner.iter().position(|m| &Manner::Uvular == m) {
+                            c.manners.inner.remove(index);
+                            c.uvular = true;
+                        }
+                    }
+                    SoundKind::Consonant(c)
+                }
+                _ => c.description
+            };
+            c.description = desc;
+            c
+        });
         let mut places = HashSet::new();
         let mut by_manners: HashMap<Manners, Vec<Uuid>> = HashMap::new();
         for s in consonants {
@@ -180,7 +302,18 @@ impl IpaApp {
             .collect::<HashMap<_, _>>();
         let sorted_manners = by_manners
             .keys()
-            .sorted_by(|a, b| partial_cmp_manners(&a.inner, &b.inner).unwrap_or(Ordering::Equal))
+            .sorted_by(|a, b|
+
+            {
+                let by_m = partial_cmp_manners(&a.inner, &b.inner).unwrap_or(Ordering::Equal);
+                if pulmonic {
+                    by_m
+                } else {
+                    let r = cmp_non_pulmonic(a, b);
+                    if r == Ordering::Equal { by_m } else { r }
+                }
+            }
+            )
             .cloned()
             .collect::<_>();
         ConsonantLookups {
@@ -226,7 +359,15 @@ impl IpaApp {
     }
 
     fn import_sounds(&mut self) {
-        self.consonant_lookups = self.import_consonants();
+        let pulmonic = self.import_consonants(crate::raw_data::PULMONIC_CONSONANTS.as_bytes(), true);
+        let non_pulmonic =
+            self.import_consonants(crate::raw_data::NON_PULMONIC_CONSONANTS.as_bytes(), false);
+        let co_articulated = self.import_co_articulated();
+        self.consonants = Consonants {
+            pulmonic,
+            non_pulmonic,
+            co_articulated,
+        };
         self.vowel_lookups = self.import_vowels();
     }
 
@@ -283,16 +424,25 @@ fn to_by_place(input: &[Uuid], sounds: &HashMap<Uuid, Sound>) -> HashMap<Place, 
 }
 
 impl IpaApp {
+    pub(crate) fn save(&self) -> IpaSave {
+        IpaSave { app: self.clone() }
+    }
+
     fn display_right(sound: &Sound) -> bool {
         match &sound.description {
             SoundKind::Vowel(v) => v.roundedness == Roundedness::Rounded,
-            SoundKind::Consonant(c) => c.voice == Some(Voice::Voiced),
+            SoundKind::Consonant(c) =>
+            if c.pulmonic || c.co_articulated || c.manners.contains(&Manner::Implosive){
+                c.voice == Some(Voice::Voiced)
+            } else {
+                c.uvular
+            }
             SoundKind::Custom => false,
         }
     }
 
     fn build_header<T: ToString>(header: &mut egui_extras::TableRow<'_, '_>, cols: &[T]) {
-        header.col(|ui| {});
+        header.col(|_| {});
         for c in cols {
             header.col(|ui| {
                 ui.separator();
@@ -336,7 +486,7 @@ impl IpaApp {
                             }
                         }
                         if !displayed {
-                            strip.cell(|ui| {});
+                            strip.cell(|_| {});
                         }
                     }
                 });
@@ -413,7 +563,7 @@ impl IpaApp {
         Self::display_sound_table_header(ui, settings, name);
         ui.push_id(name, |ui| {
             ScrollArea::horizontal().show(ui, |ui| {
-                let mut table = TableBuilder::new(ui)
+                let table = TableBuilder::new(ui)
                     .id_salt(name)
                     .striped(true)
                     .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
@@ -446,15 +596,28 @@ impl IpaApp {
         });
     }
 
-    fn consonant_table(&mut self, ui: &mut Ui) {
-        let cols = if self.settings.hide_unselected.contains("consonants") {
-            self.selected
+    fn pulmonic_consonant_table(&mut self, ui: &mut Ui) {
+        Self::consonant_table(ui, &self.consonants.pulmonic, &mut self.selected, &self.sounds, &mut self.settings, "pulmonic consonants");
+    }
+
+    fn non_pulmonic_consonant_table (&mut self, ui: &mut Ui) {
+        Self::consonant_table(ui, &self.consonants.non_pulmonic, &mut self.selected, &self.sounds, &mut self.settings, "non-pulmonic consonants");
+    }
+
+    fn consonant_table(ui: &mut Ui, lookup: &ConsonantLookups, selected: &mut SelectedSounds, sounds: &HashMap<Uuid, Sound>, settings: &mut IpaAppSettings, name : &str) {
+        let cols = if settings.hide_unselected.contains(name) {
+            selected
                 .map
                 .iter()
                 .filter_map(|(id, b)| {
                     if *b {
-                        self.sounds.get(id).and_then(|v| match &v.description {
-                            SoundKind::Consonant(c) => Some(c.place),
+                       sounds.get(id).and_then(|v| match &v.description {
+                            SoundKind::Consonant(c) =>
+                            if lookup.places.contains(&c.place) {
+                                Some(c.place)
+                            } else{
+                                None
+                            },
                             _ => None,
                         })
                     } else {
@@ -466,18 +629,18 @@ impl IpaApp {
                 .sorted()
                 .collect::<Vec<_>>()
         } else {
-            self.consonant_lookups.places.clone()
+            lookup.places.clone()
         };
         Self::display_sound_table(
             ui,
-            &self.consonant_lookups.by_manners,
-            &mut self.selected,
-            &self.sounds,
-            &self.consonant_lookups.sorted_manners,
-            &self.consonant_lookups.empty_rows,
+            &lookup.by_manners,
+            selected,
+            sounds,
+            &lookup.sorted_manners,
+            &lookup.empty_rows,
             &cols,
-            "consonants",
-            &mut self.settings,
+            name,
+            settings,
         );
     }
 
@@ -535,7 +698,7 @@ impl IpaApp {
     }
 
     fn update_empty_rows(&mut self) {
-        for m in &self.consonant_lookups.sorted_manners {
+        for m in &self.consonants.pulmonic.sorted_manners {
             if self
                 .selected
                 .map
@@ -547,9 +710,9 @@ impl IpaApp {
                     _ => false,
                 })
             {
-                self.consonant_lookups.empty_rows.insert(m.clone(), false);
+                self.consonants.pulmonic.empty_rows.insert(m.clone(), false);
             } else {
-                self.consonant_lookups.empty_rows.insert(m.clone(), true);
+                self.consonants.pulmonic.empty_rows.insert(m.clone(), true);
             }
         }
 
@@ -574,7 +737,7 @@ impl IpaApp {
 }
 
 impl SubApp for IpaApp {
-    fn update(&mut self, ctx: &Context, frame: &mut eframe::Frame, shared_data: &mut SharedData) {
+    fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame, shared_data: &mut SharedData) {
         self.selected.changed = false;
         egui::SidePanel::right("results")
             .min_width(100.)
@@ -584,12 +747,25 @@ impl SubApp for IpaApp {
                 self.categories(ui, &shared_data);
             });
         egui::CentralPanel::default().show(ctx, |ui| {
+            ui.horizontal(|ui| {
+                if ui.button("Reset all!").clicked() {
+                    *self = Self::new(shared_data);
+                    return;
+                }
+                if ui.button("Clear all!").clicked() {
+                    self.selected.map.iter_mut().for_each(|(_,v)| *v = false );
+                    self.selected.changed = true;
+                }
+            });
             ScrollArea::vertical().show(ui, |ui| {
                 ui.heading("Consonants");
-                self.consonant_table(ui);
+                self.pulmonic_consonant_table(ui);
                 ui.add_space(20.);
                 ui.heading("Vowels");
                 self.vowel_table(ui);
+                ui.add_space(20.);
+                ui.heading("Non-Pulmonic Consonants");
+                self.non_pulmonic_consonant_table(ui);
             });
         });
         if self.selected.changed {
@@ -648,7 +824,7 @@ fn display_sound_inner(
     } else {
         let mut editable = sound.representation().to_string();
         if !settings.hide_unselected.contains(name) || selected.is_selected(id) {
-            let mut edit = ui.text_edit_singleline(&mut editable);
+            let edit = ui.text_edit_singleline(&mut editable);
             if selected.is_selected(id) {
                 edit.highlight();
             }

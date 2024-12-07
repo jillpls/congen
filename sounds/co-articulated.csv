@@ -1,0 +1,21 @@
+symbol,place,voice,manner,complexity
+n͡m,labial-alveolar,voiced,nasal,10
+ɳ͡m,labial-retroflex,voiced,nasal,10
+ŋ͡m,labial-velar,voiced,nasal,10
+t͡p,labial-alveolar,voiceless,plosive,10
+d͡b,labial-alveolar,voiced,plosive,10
+ʈ͡p,labial-retroflex,voiceless,plosive,10
+ɖ͡b,labial-retroflex,voiced,plosive,10
+k͡p,labial-velar,voiceless,plosive,10
+ɡ͡b,labial-velar,voiced,plosive,10
+q͡ʡ,uvular-epiglottal,voiceless,plosive,10
+q͡p,labial-uvular,voiceless,plosive,10
+ɥ̊,labial-palatal,voiceless,fricative,10
+ɥ,labial-palatal,voiced,fricative,10
+ʍ,labial-velar,voiceless,fricative,10
+w,labial-velar,voiced,fricative,1
+ɧ,palatal-velar,voiceless,fricative,10
+ɫ,velarized alveolar,voiced,approximant lateral,10
+ɠ̊͜ɓ̥,labial-velar,voiceless,implosive,10
+ɠ͡ɓ,labial-velar,voiceless,implosive,10
+t͡pʼ,labial-alveolar,voiceless,ejective,10

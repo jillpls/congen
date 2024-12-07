@@ -1,15 +1,17 @@
+use crate::app::SharedData;
 use crate::sounds::Sound;
 use crate::word::{Syllable, SyllablePart, Word};
+use serde::{Deserialize, Serialize};
 
-#[derive(Default)]
+#[derive(Default, Clone, Serialize, Deserialize)]
 pub struct RewriteRuleCollection {
     rules: Vec<RewriteRule>,
 }
 
 impl RewriteRuleCollection {
-    pub fn apply_to_word(&self, word: &mut Word) {
+    pub fn apply_to_word(&self, word: &mut Word, data: &SharedData) {
         for rule in &self.rules {
-            rule.apply_to_word(word);
+            rule.apply_to_word(word, data);
         }
     }
 
@@ -25,6 +27,7 @@ impl RewriteRuleCollection {
         })
     }
 
+    #[allow(unused)]
     pub fn apply_to_str(&self, input: &str) -> String {
         self.rules
             .iter()
@@ -32,6 +35,7 @@ impl RewriteRuleCollection {
     }
 }
 
+#[derive(Default, Clone, Serialize, Deserialize, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct RewriteRule {
     pub from: String,
     pub to: String,
@@ -53,7 +57,11 @@ impl RewriteRule {
         input.replace(&self.from, &self.to)
     }
 
-    pub fn apply_to_word(&self, word: &mut Word) {
+    pub fn apply_to_word(&self, word: &mut Word, data: &SharedData) {
+        if !data.sound_by_representation.contains_key(&self.from) {
+            word.rewrite_rules.push(self.clone());
+            return;
+        }
         for syllable in word.syllables.iter_mut() {
             self.apply_to_syllable(syllable);
         }

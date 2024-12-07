@@ -1,5 +1,6 @@
-use crate::app::ipa::IpaApp;
+use crate::app::ipa::{IpaApp, IpaSave};
 use crate::app::sound_change::SoundChangeApp;
+use crate::app::word_gen::save::WordGenSave;
 use crate::app::word_gen::WordGenApp;
 use crate::sounds::Sound;
 use eframe::epaint::FontFamily;
@@ -11,13 +12,20 @@ use std::fmt::{Display, Formatter};
 use strum::{EnumIter, IntoEnumIterator};
 use uuid::Uuid;
 
-mod header;
+mod file_handling;
 mod ipa;
 mod shared;
 mod sound_change;
 mod word_gen;
 
 pub type Categories = Vec<(String, Vec<(Uuid, Sound)>)>;
+
+#[derive(Serialize, Deserialize)]
+pub struct Save {
+    selected_tab: TabId,
+    word_gen_save: WordGenSave,
+    ipa_save: IpaSave,
+}
 
 pub fn extract_sound_by_representation(sounds: &HashMap<Uuid, Sound>) -> HashMap<String, Uuid> {
     let mut result = HashMap::new();
@@ -31,9 +39,9 @@ pub fn extract_sound_by_representation(sounds: &HashMap<Uuid, Sound>) -> HashMap
 
 #[derive(Default)]
 pub struct SharedData {
-    sound_by_representation: HashMap<String, Uuid>,
-    sounds: HashMap<Uuid, Sound>,
-    categories: Categories,
+    pub sound_by_representation: HashMap<String, Uuid>,
+    pub sounds: HashMap<Uuid, Sound>,
+    pub categories: Categories,
 }
 
 pub trait SubApp {
@@ -83,13 +91,17 @@ impl WrapperApp {
         cc.egui_ctx.set_fonts(fonts);
         let mut result = Self::default();
         if let Some(storage) = cc.storage {
-            let word_gen_settings = eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
-            result.word_gen_app.settings = word_gen_settings;
+            if let Some(save) = eframe::get_value::<Save>(storage, eframe::APP_KEY) {
+                result.tab = save.selected_tab;
+                result.word_gen_app = WordGenApp::load(save.word_gen_save);
+                result.ipa_app = save.ipa_save.app;
+            }
         }
+
         result
     }
 
-    fn settings_panel(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn settings_panel(&mut self, ctx: &Context, _frame: &mut Frame) {
         let is_open = self.settings_open;
         egui::SidePanel::left("settings_panel")
             .resizable(false)
@@ -101,7 +113,7 @@ impl WrapperApp {
             });
     }
 
-    fn header_bar(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn header_bar(&mut self, ctx: &egui::Context, _frame: &mut Frame) {
         egui::TopBottomPanel::top("header").show(ctx, |ui| {
             ui.horizontal_wrapped(|ui| {
                 egui::widgets::global_theme_preference_switch(ui);
@@ -135,7 +147,12 @@ impl WrapperApp {
 
 impl App for WrapperApp {
     fn save(&mut self, _storage: &mut dyn Storage) {
-        eframe::set_value(_storage, eframe::APP_KEY, &self.word_gen_app.settings)
+        let save = Save {
+            selected_tab: self.tab,
+            word_gen_save: self.word_gen_app.save(),
+            ipa_save: self.ipa_app.save(),
+        };
+        eframe::set_value(_storage, eframe::APP_KEY, &save)
     }
 
     fn update(&mut self, ctx: &Context, frame: &mut Frame) {
@@ -161,7 +178,7 @@ impl App for WrapperApp {
 
         self.settings_panel(ctx, frame);
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        CentralPanel::default().show(ctx, |_| {
             match self.tab {
                 TabId::Ipa => {
                     self.ipa_app.update(ctx, frame, &mut self.shared_data);
@@ -200,18 +217,9 @@ impl Display for TabId {
                 TabId::SoundChange => {
                     "SoundChange"
                 }
-                _ => {
-                    "???"
-                }
             }
         )
     }
-}
-
-pub struct Tab {
-    identifier: TabId,
-    name: String,
-    app: Option<Box<dyn App>>,
 }
 
 fn powered_by_egui_and_eframe(ui: &mut egui::Ui) {

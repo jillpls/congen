@@ -1,0 +1,78 @@
+symbol,place,voice,manner,complexity
+pʼ,bilabial,voiceless,plosive ejective,10
+tʼ,alveolar,voiceless,plosive ejective,10
+ʈʼ,retroflex,voiceless,plosive ejective,10
+cʼ,palatal,voiceless,plosive ejective,10
+kʼ,velar,voiceless,plosive ejective,10
+qʼ,uvular,voiceless,plosive ejective,10
+ʡʼ,pharyngeal/epiglottal,voiceless,plosive ejective,10
+p̪fʼ,labiodental,voiceless,affricate ejective,10
+t̪θʼ,dental,voiceless,affricate ejective,10
+tsʼ,alveolar,voiceless,affricate ejective,10
+t̠ʃʼ,postalveolar,voiceless,affricate ejective,10
+tʂʼ,retroflex,voiceless,affricate ejective,10
+tɕʼ,palatal,voiceless,affricate ejective,10
+kxʼ,velar,voiceless,affricate ejective,10
+qχʼ,uvular,voiceless,affricate ejective,10
+ɸʼ,bilabial,voiceless,fricative ejective,10
+fʼ,labiodental,voiceless,fricative ejective,10
+θʼ,dental,voiceless,fricative ejective,10
+sʼ,alveolar,voiceless,fricative ejective,10
+ʃʼ,postalveolar,voiceless,fricative ejective,10
+ʂʼ,retroflex,voiceless,fricative ejective,10
+ɕʼ,palatal,voiceless,fricative ejective,10
+xʼ,uvular,voiceless,fricative ejective,10
+χʼ,pharyngeal/epiglottal,voiceless,fricative ejective,10
+tɬʼ,alveolar,voiceless,affricate lateral ejective,10
+cʎ̥ʼ̝,palatal,voiceless,affricate lateral ejective,10
+kʟ̝̊ʼ,velar,voiceless,affricate lateral ejective,10
+qʟ̝̊ʼ,uvular,voiceless,affricate lateral ejective,10
+ɬʼ,alveolar,voiceless,fricative lateral ejective,10
+kʘ,bilabial,voiceless,click tenuis,10
+qʘ,bilabial,voiceless,uvular click tenuis,10
+kǀ,dental,voiceless,click tenuis,10
+qǀ,dental,voiceless,uvular click tenuis,10
+kǃ,alveolar,voiceless,click tenuis,10
+qǃ,alveolar,voiceless,uvular click tenuis,10
+k͡‼,retroflex,voiceless,click tenuis,10
+q͡‼,retroflex,voiceless,uvular click tenuis,10
+kǂ,palatal,voiceless,click tenuis,10
+qǂ,palatal,voiceless,uvular click tenuis,10
+ɡʘ,bilabial,voiced,voiced click,10
+ɢʘ,bilabial,voiced,voiced uvular click,10
+ɡǀ,dental,voiced,voiced click,10
+ɢǀ,dental,voiced,voiced uvular click,10
+ɡǃ,alveolar,voiced,voiced click,10
+ɢǃ,alveolar,voiced,voiced uvular click,10
+ɡ͡‼,retroflex,voiced,voiced click,10
+ɢ͡‼,retroflex,voiced,voiced uvular click,10
+ɡǂ,palatal,voiced,voiced click,10
+ɢǂ,palatal,voiced,voiced uvular click,10
+ŋʘ,bilabial,voiceless,nasal click,10
+ɴʘ,bilabial,voiceless,nasal uvular click,10
+ŋǀ,dental,voiceless,nasal click,10
+ɴǀ,dental,voiceless,nasal uvular click,10
+ŋǃ,alveolar,voiceless,nasal click,10
+ɴǃ,alveolar,voiceless,nasal uvular click,10
+ŋ͡‼,retroflex,voiceless,nasal click,10
+ɴ͡‼,retroflex,voiceless,nasal uvular click,10
+ŋǂ,palatal,voiceless,nasal click,10
+ɴǂ,palatal,voiceless,nasal uvular click,10
+kǁ,alveolar,voiceless,lateral click tenuis,10
+qǁ,alveolar,voiceless,lateral uvular click tenuis,10
+ɡǁ,alveolar,voiced,voiced lateral click,10
+ɢǁ,alveolar,voiced,voiced lateral uvular click,10
+ŋǁ,alveolar,voiceless,nasal lateral click,10
+ɴǁ,alveolar,voiceless,nasal lateral uvular click,10
+ɓ,bilabial,voiced,implosive,10
+ɓ̥,bilabial,voiceless,implosive,10
+ɗ,alveolar,voiced,implosive,10
+ɗ̥,alveolar,voiceless,implosive,10
+ᶑ,retroflex,voiced,implosive,10
+ᶑ̊,retroflex,voiceless,implosive,10
+ʄ,palatal,voiced,implosive,10
+ʄ̊,palatal,voiceless,implosive,10
+ɠ,velar,voiced,implosive,10
+ɠ̊,velar,voiceless,implosive,10
+ʛ,uvular,voiced,implosive,10
+ʛ̥,uvular,voiceless,implosive,10

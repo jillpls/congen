@@ -1,0 +1,66 @@
+{
+  "is_advanced": false,
+  "base": {
+    "categories_str": "",
+    "words_str": "",
+    "rewrites_str": "",
+    "rewrite_rules": {
+      "rules": []
+    },
+    "categories": [
+      [
+        "?",
+        []
+      ]
+    ]
+  },
+  "advanced": {
+    "onset_input": {
+      "name_str": "",
+      "value_str": "",
+      "added": [
+        [
+          "O",
+          "(C)"
+        ]
+      ]
+    },
+    "nucleus_input": {
+      "name_str": "",
+      "value_str": "",
+      "added": [
+        [
+          "N",
+          "V"
+        ]
+      ]
+    },
+    "coda_input": {
+      "name_str": "",
+      "value_str": "",
+      "added": [
+        [
+          "C",
+          "(C)"
+        ]
+      ]
+    },
+    "syllables_input": {
+      "name_str": "",
+      "onset_str": "",
+      "nucleus_str": "",
+      "coda_str": "",
+      "added": [
+        [
+          "A",
+          "O",
+          "N",
+          "C"
+        ]
+      ]
+    }
+  },
+  "simple": {
+    "syllables_str": ""
+  }
+}

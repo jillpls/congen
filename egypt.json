@@ -1,0 +1,1039 @@
+{
+  "is_advanced": true,
+  "base": {
+    "categories_str": "V=aeiuə\nC=bcfghjklmnpqsvwzçɟɾʀʃχ\nP=bcgkpqɟ\nN=mn\nF=fsvzçʃχ\nH=h\nR=jlwɾʀ",
+    "words_str": "AA3",
+    "rewrites_str": "ç|ch\nʃ|sh\nχ|x",
+    "rewrite_rules": {
+      "rules": [
+        {
+          "from": "ç",
+          "to": "ch"
+        },
+        {
+          "from": "ʃ",
+          "to": "sh"
+        },
+        {
+          "from": "χ",
+          "to": "x"
+        }
+      ]
+    },
+    "categories": [
+      [
+        "V",
+        [
+          [
+            "622092f2-3824-48f0-b28e-c0766771c6e2",
+            {
+              "representation": "a",
+              "description": {
+                "Vowel": {
+                  "height": "Open",
+                  "backness": "Front",
+                  "roundedness": "Unrounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "85471ca2-083c-4821-b71d-c5759c017209",
+            {
+              "representation": "e",
+              "description": {
+                "Vowel": {
+                  "height": "CloseMid",
+                  "backness": "Front",
+                  "roundedness": "Unrounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 1
+            }
+          ],
+          [
+            "71257091-5c90-472a-a74c-2166ea7e063d",
+            {
+              "representation": "i",
+              "description": {
+                "Vowel": {
+                  "height": "Close",
+                  "backness": "Front",
+                  "roundedness": "Unrounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "082faede-7c71-4c5e-aeb9-2b195731758d",
+            {
+              "representation": "u",
+              "description": {
+                "Vowel": {
+                  "height": "Close",
+                  "backness": "Back",
+                  "roundedness": "Rounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "56422bee-b47a-469c-82a3-5680b0713f9a",
+            {
+              "representation": "ə",
+              "description": {
+                "Vowel": {
+                  "height": "Mid",
+                  "backness": "Central",
+                  "roundedness": "Unrounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 2
+            }
+          ]
+        ]
+      ],
+      [
+        "C",
+        [
+          [
+            "7cadcebb-9588-4265-9229-a3e4aa3b0e83",
+            {
+              "representation": "b",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Bilabial",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "028e7708-71f9-4ff6-b5cf-a999384134df",
+            {
+              "representation": "c",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Palatal",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "cceabcc6-40a0-4848-bb7c-dbe4fa389314",
+            {
+              "representation": "f",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Labiodental",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "0157583e-f6bd-454e-8535-563e1ae081a3",
+            {
+              "representation": "g",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Velar",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "8227a59b-0de1-4f41-a8e6-f613a86966cf",
+            {
+              "representation": "h",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Glottal",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "ac231d03-784d-4a40-9980-040f36ba340b",
+            {
+              "representation": "j",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Palatal",
+                  "manners": {
+                    "inner": [
+                      "Approximant"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "93bac2ae-12df-4754-ab86-a28349f35e55",
+            {
+              "representation": "k",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Velar",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "6d9813fb-76ac-4aeb-af2c-14d29a41c2a5",
+            {
+              "representation": "l",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Lateral",
+                      "Approximant"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "6793dd3b-cf68-4e1a-b176-dbb35b1025b3",
+            {
+              "representation": "m",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Bilabial",
+                  "manners": {
+                    "inner": [
+                      "Nasal"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "eddf5f23-01e8-4b62-926b-1b5ca4e012fc",
+            {
+              "representation": "n",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Nasal"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "c89a88f0-5a4a-4c14-b168-bbc6f25e92a6",
+            {
+              "representation": "p",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Bilabial",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "c6230c2f-ec33-4001-bf27-a5ce6d120412",
+            {
+              "representation": "q",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Uvular",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "448fda8b-ca7b-4076-9593-139de3143027",
+            {
+              "representation": "s",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Sibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "27089303-cc8e-4d30-9009-476c257a0bb4",
+            {
+              "representation": "v",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Labiodental",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "aa45fb15-ae0a-4063-8c9e-28ad0b89fbcb",
+            {
+              "representation": "w",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "LabialVelar",
+                  "manners": {
+                    "inner": [
+                      "Approximant"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "ab7e86d4-831d-4211-85b4-03e537985b14",
+            {
+              "representation": "z",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Sibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "dc3f12e0-79c1-4e1e-a196-9b73caae8095",
+            {
+              "representation": "ç",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Palatal",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "e0b8a2d6-d431-42cb-ad06-09f5fa210827",
+            {
+              "representation": "ɟ",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Palatal",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "251e5294-8afe-4070-9a2a-ebb4e12c6dbc",
+            {
+              "representation": "ɾ",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "TapFlap"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 2
+            }
+          ],
+          [
+            "ba575b21-f74e-467c-8960-c31851a3800d",
+            {
+              "representation": "ʀ",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Uvular",
+                  "manners": {
+                    "inner": [
+                      "Trill"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "7c86210e-cbc0-4322-b1ea-264a1d36c692",
+            {
+              "representation": "ʃ",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Postalveolar",
+                  "manners": {
+                    "inner": [
+                      "Sibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "1c5a5dda-f69d-42c0-9f5d-545a37ae4dfa",
+            {
+              "representation": "χ",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Uvular",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ]
+        ]
+      ],
+      [
+        "P",
+        [
+          [
+            "7cadcebb-9588-4265-9229-a3e4aa3b0e83",
+            {
+              "representation": "b",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Bilabial",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "028e7708-71f9-4ff6-b5cf-a999384134df",
+            {
+              "representation": "c",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Palatal",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "0157583e-f6bd-454e-8535-563e1ae081a3",
+            {
+              "representation": "g",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Velar",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "93bac2ae-12df-4754-ab86-a28349f35e55",
+            {
+              "representation": "k",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Velar",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "c89a88f0-5a4a-4c14-b168-bbc6f25e92a6",
+            {
+              "representation": "p",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Bilabial",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "c6230c2f-ec33-4001-bf27-a5ce6d120412",
+            {
+              "representation": "q",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Uvular",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "e0b8a2d6-d431-42cb-ad06-09f5fa210827",
+            {
+              "representation": "ɟ",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Palatal",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ]
+        ]
+      ],
+      [
+        "N",
+        [
+          [
+            "6793dd3b-cf68-4e1a-b176-dbb35b1025b3",
+            {
+              "representation": "m",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Bilabial",
+                  "manners": {
+                    "inner": [
+                      "Nasal"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "eddf5f23-01e8-4b62-926b-1b5ca4e012fc",
+            {
+              "representation": "n",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Nasal"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ]
+        ]
+      ],
+      [
+        "F",
+        [
+          [
+            "cceabcc6-40a0-4848-bb7c-dbe4fa389314",
+            {
+              "representation": "f",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Labiodental",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "448fda8b-ca7b-4076-9593-139de3143027",
+            {
+              "representation": "s",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Sibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "27089303-cc8e-4d30-9009-476c257a0bb4",
+            {
+              "representation": "v",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Labiodental",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "ab7e86d4-831d-4211-85b4-03e537985b14",
+            {
+              "representation": "z",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Sibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "dc3f12e0-79c1-4e1e-a196-9b73caae8095",
+            {
+              "representation": "ç",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Palatal",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "7c86210e-cbc0-4322-b1ea-264a1d36c692",
+            {
+              "representation": "ʃ",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Postalveolar",
+                  "manners": {
+                    "inner": [
+                      "Sibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "1c5a5dda-f69d-42c0-9f5d-545a37ae4dfa",
+            {
+              "representation": "χ",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Uvular",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ]
+        ]
+      ],
+      [
+        "H",
+        [
+          [
+            "8227a59b-0de1-4f41-a8e6-f613a86966cf",
+            {
+              "representation": "h",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiceless",
+                  "place": "Glottal",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ]
+        ]
+      ],
+      [
+        "R",
+        [
+          [
+            "ac231d03-784d-4a40-9980-040f36ba340b",
+            {
+              "representation": "j",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Palatal",
+                  "manners": {
+                    "inner": [
+                      "Approximant"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "6d9813fb-76ac-4aeb-af2c-14d29a41c2a5",
+            {
+              "representation": "l",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Lateral",
+                      "Approximant"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "aa45fb15-ae0a-4063-8c9e-28ad0b89fbcb",
+            {
+              "representation": "w",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "LabialVelar",
+                  "manners": {
+                    "inner": [
+                      "Approximant"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "251e5294-8afe-4070-9a2a-ebb4e12c6dbc",
+            {
+              "representation": "ɾ",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "TapFlap"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 2
+            }
+          ],
+          [
+            "ba575b21-f74e-467c-8960-c31851a3800d",
+            {
+              "representation": "ʀ",
+              "description": {
+                "Consonant": {
+                  "voice": "Voiced",
+                  "place": "Uvular",
+                  "manners": {
+                    "inner": [
+                      "Trill"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ]
+        ]
+      ]
+    ]
+  },
+  "advanced": {
+    "onset_input": {
+      "name_str": "",
+      "value_str": "",
+      "added": [
+        [
+          "O",
+          "(C)"
+        ]
+      ]
+    },
+    "nucleus_input": {
+      "name_str": "",
+      "value_str": "",
+      "added": [
+        [
+          "N",
+          "V"
+        ]
+      ]
+    },
+    "coda_input": {
+      "name_str": "",
+      "value_str": "",
+      "added": [
+        [
+          "C",
+          "(C)"
+        ]
+      ]
+    },
+    "syllables_input": {
+      "name_str": "",
+      "onset_str": "",
+      "nucleus_str": "",
+      "coda_str": "",
+      "added": [
+        [
+          "A",
+          "O",
+          "N",
+          "C"
+        ]
+      ]
+    }
+  },
+  "simple": {
+    "syllables_str": "A=(C)V(C)"
+  }
+}
