@@ -1,17 +1,19 @@
-use std::arch::x86_64::__cpuid;
-use crate::app::{Categories, SubApp};
 use crate::app::{extract_sound_by_representation, SharedData};
-use crate::sounds::{parse_consonants, Manner, Place, Sound, SoundKind, Consonant, cmp_non_pulmonic};
+use crate::app::{Categories, SubApp};
+use crate::sounds::{
+    cmp_non_pulmonic, parse_consonants, Consonant, Manner, Place, Sound, SoundKind,
+};
 use crate::sounds::{
     parse_vowels, partial_cmp_manners, Backness, Height, Manners, Roundedness, Voice,
 };
 use eframe::emath::Vec2;
-use egui::{Order, ScrollArea};
 use egui::{Context, Ui};
-use egui_extras::TableBuilder;
+use egui::{Order, ScrollArea};
 use egui_extras::{Column, Size, StripBuilder};
+use egui_extras::{Strip, TableBuilder};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use std::arch::x86_64::__cpuid;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
@@ -77,13 +79,29 @@ pub struct VowelLookups {
     empty_rows: HashMap<Height, bool>,
 }
 
-#[derive(Default, Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct IpaApp {
     sounds: HashMap<Uuid, Sound>,
     selected: SelectedSounds,
     consonants: Consonants,
     vowel_lookups: VowelLookups,
     settings: IpaAppSettings,
+    table: String,
+    tabs: bool
+}
+
+impl Default for IpaApp {
+    fn default() -> Self {
+        Self {
+            sounds: Default::default(),
+            selected: Default::default(),
+            consonants: Default::default(),
+            vowel_lookups: Default::default(),
+            settings: Default::default(),
+            table: "Consonants".to_string(),
+            tabs: true
+        }
+    }
 }
 
 fn filter_deref_vec<'a, F: FnMut(&(&Uuid, &Sound)) -> bool>(
@@ -121,40 +139,47 @@ impl IpaApp {
             .sorted_by(|a, b| self.sounds.get(a).unwrap().cmp(self.sounds.get(b).unwrap()))
             .collect::<Vec<_>>();
         let consonants = filter_deref_vec(sounds.iter(), |(_, s)| s.is_consonant(), &self.sounds);
-        let pulmonic = filter_deref_vec(consonants.iter(), |(_, s)| match &s.description {
-            SoundKind::Consonant(c) => c.pulmonic,
-            _ => false
-        }, &self.sounds);
-        let non_pulmonic = filter_deref_vec(consonants.iter(), |(_, s)| match &s.description {
-            SoundKind::Consonant(c) => !c.pulmonic,
-            _ => false
-        }, &self.sounds);
-        let ejectives = filter_deref_vec(consonants.iter(), |(_,s)| {
-            match &s.description {
-                SoundKind::Consonant(c) => {
-                    c.manners.contains(&Manner::Ejective)
-                }
-                _ => false
-            }
-        }, &self.sounds);
-        let clicks = filter_deref_vec(consonants.iter(), |(_,s)| {
-            match &s.description {
-                SoundKind::Consonant(c) => {
-                    c.manners.contains(&Manner::Click)
-                }
-                _ => false
-            }
-        }, &self.sounds);
-        let implosives = filter_deref_vec(consonants.iter(), |(_,s)| {
-            match &s.description {
-                SoundKind::Consonant(c) => {
-                    c.manners.contains(&Manner::Implosive)
-                }
-                _ => false
-            }
-        }, &self.sounds);
-        let non_glottal =
-            filter_deref_vec(pulmonic.iter(), |(_, s)| !s.is_glottal(), &self.sounds);
+        let pulmonic = filter_deref_vec(
+            consonants.iter(),
+            |(_, s)| match &s.description {
+                SoundKind::Consonant(c) => c.pulmonic,
+                _ => false,
+            },
+            &self.sounds,
+        );
+        let non_pulmonic = filter_deref_vec(
+            consonants.iter(),
+            |(_, s)| match &s.description {
+                SoundKind::Consonant(c) => !c.pulmonic,
+                _ => false,
+            },
+            &self.sounds,
+        );
+        let ejectives = filter_deref_vec(
+            consonants.iter(),
+            |(_, s)| match &s.description {
+                SoundKind::Consonant(c) => c.manners.contains(&Manner::Ejective),
+                _ => false,
+            },
+            &self.sounds,
+        );
+        let clicks = filter_deref_vec(
+            consonants.iter(),
+            |(_, s)| match &s.description {
+                SoundKind::Consonant(c) => c.manners.contains(&Manner::Click),
+                _ => false,
+            },
+            &self.sounds,
+        );
+        let implosives = filter_deref_vec(
+            consonants.iter(),
+            |(_, s)| match &s.description {
+                SoundKind::Consonant(c) => c.manners.contains(&Manner::Implosive),
+                _ => false,
+            },
+            &self.sounds,
+        );
+        let non_glottal = filter_deref_vec(pulmonic.iter(), |(_, s)| !s.is_glottal(), &self.sounds);
         let glottal = filter_deref_vec(pulmonic.iter(), |(_, s)| s.is_glottal(), &self.sounds);
         let nasals = filter_deref_vec(non_glottal.iter(), |(_, s)| s.is_nasal(), &self.sounds);
         let plosives = filter_deref_vec(non_glottal.iter(), |(_, s)| s.is_plosive(), &self.sounds);
@@ -171,7 +196,7 @@ impl IpaApp {
         let plosives = ("P", plosives);
         let fricative_affricates = ("F", fricative_affricates);
         let attl = ("R", attl);
-        let ejectives= ("E", ejectives);
+        let ejectives = ("E", ejectives);
         let clicks = ("K", clicks);
         let implosives = ("I", implosives);
         let non_pulmonic = ("Q", non_pulmonic);
@@ -214,7 +239,7 @@ impl IpaApp {
                     c.co_articulated = true;
                     SoundKind::Consonant(c)
                 }
-                _ => c.description
+                _ => c.description,
             };
             c.description = desc;
             c
@@ -236,7 +261,9 @@ impl IpaApp {
                     plosive.push(id);
                 } else if c.manners.contains(&Manner::Fricative) {
                     fricative.push(id);
-                } else if c.manners.contains(&Manner::Lateral) && c.manners.contains(&Manner::Approximant) {
+                } else if c.manners.contains(&Manner::Lateral)
+                    && c.manners.contains(&Manner::Approximant)
+                {
                     lateral_approximant.push(id);
                 } else if c.manners.contains(&Manner::Implosive) {
                     implosive.push(id);
@@ -247,13 +274,16 @@ impl IpaApp {
                 }
             }
         }
-        let left = vec![("nasal".to_string(), nasal), ("plosive".to_string(), plosive)];
+        let left = vec![
+            ("nasal".to_string(), nasal),
+            ("plosive".to_string(), plosive),
+        ];
         let right = vec![
             ("fricative/approximant".to_string(), fricative),
             ("lateral approximant".to_string(), lateral_approximant),
             ("implosive".to_string(), implosive),
             ("ejective".to_string(), ejective),
-            ("other".to_string(), misc)
+            ("other".to_string(), misc),
         ];
         (left, right)
     }
@@ -265,14 +295,16 @@ impl IpaApp {
                 SoundKind::Consonant(mut c) => {
                     c.pulmonic = pulmonic;
                     if !pulmonic {
-                        if let Some(index) = c.manners.inner.iter().position(|m| &Manner::Uvular == m) {
+                        if let Some(index) =
+                            c.manners.inner.iter().position(|m| &Manner::Uvular == m)
+                        {
                             c.manners.inner.remove(index);
                             c.uvular = true;
                         }
                     }
                     SoundKind::Consonant(c)
                 }
-                _ => c.description
+                _ => c.description,
             };
             c.description = desc;
             c
@@ -302,18 +334,19 @@ impl IpaApp {
             .collect::<HashMap<_, _>>();
         let sorted_manners = by_manners
             .keys()
-            .sorted_by(|a, b|
-
-            {
+            .sorted_by(|a, b| {
                 let by_m = partial_cmp_manners(&a.inner, &b.inner).unwrap_or(Ordering::Equal);
                 if pulmonic {
                     by_m
                 } else {
                     let r = cmp_non_pulmonic(a, b);
-                    if r == Ordering::Equal { by_m } else { r }
+                    if r == Ordering::Equal {
+                        by_m
+                    } else {
+                        r
+                    }
                 }
-            }
-            )
+            })
             .cloned()
             .collect::<_>();
         ConsonantLookups {
@@ -359,7 +392,8 @@ impl IpaApp {
     }
 
     fn import_sounds(&mut self) {
-        let pulmonic = self.import_consonants(crate::raw_data::PULMONIC_CONSONANTS.as_bytes(), true);
+        let pulmonic =
+            self.import_consonants(crate::raw_data::PULMONIC_CONSONANTS.as_bytes(), true);
         let non_pulmonic =
             self.import_consonants(crate::raw_data::NON_PULMONIC_CONSONANTS.as_bytes(), false);
         let co_articulated = self.import_co_articulated();
@@ -431,11 +465,12 @@ impl IpaApp {
     fn display_right(sound: &Sound) -> bool {
         match &sound.description {
             SoundKind::Vowel(v) => v.roundedness == Roundedness::Rounded,
-            SoundKind::Consonant(c) =>
-            if c.pulmonic || c.co_articulated || c.manners.contains(&Manner::Implosive){
-                c.voice == Some(Voice::Voiced)
-            } else {
-                c.uvular
+            SoundKind::Consonant(c) => {
+                if c.pulmonic || c.co_articulated || c.manners.contains(&Manner::Implosive) {
+                    c.voice == Some(Voice::Voiced)
+                } else {
+                    c.uvular
+                }
             }
             SoundKind::Custom => false,
         }
@@ -453,6 +488,36 @@ impl IpaApp {
         }
     }
 
+    fn display_sound_cell_cell(strip: &mut Strip, id: Option<Uuid>, sounds: &HashMap<Uuid, Sound>, selected : &mut SelectedSounds, settings: &IpaAppSettings, name: &str) {
+        strip.cell(|ui| {
+            if let Some((id, sound)) =
+                id.and_then(|id| sounds.get(&id).map(|s| (id, s)))
+            {
+                display_sound(ui, &id, sound, selected, settings, name);
+            }
+        });
+    }
+
+    fn display_custom_sound_cell(
+        ui: &mut Ui,
+        left: Option<Uuid>,
+        right: Option<Uuid>,
+        sounds: &HashMap<Uuid, Sound>,
+        selected: &mut SelectedSounds,
+        settings: &IpaAppSettings,
+        name: &str,
+    ) {
+        ui.centered_and_justified(|ui| {
+            let _ = StripBuilder::new(ui)
+                .size(Size::exact(30.))
+                .size(Size::exact(30.))
+                .horizontal(|mut strip| {
+                    Self::display_sound_cell_cell(&mut strip, left, sounds, selected, settings, name);
+                    Self::display_sound_cell_cell(&mut strip, right, sounds, selected, settings, name);
+                });
+        });
+    }
+
     fn display_sound_cell<C: Eq + Hash>(
         ui: &mut Ui,
         contents: Option<&HashMap<C, Vec<Uuid>>>,
@@ -467,28 +532,18 @@ impl IpaApp {
                 .size(Size::exact(30.))
                 .size(Size::exact(30.))
                 .horizontal(|mut strip| {
-                    for v in [false, true] {
-                        let mut displayed = false;
-                        if let Some(r) = &contents {
-                            if let Some(s) = r.get(col) {
-                                for id in s {
-                                    if let Some(sound) = sounds.get(id) {
-                                        if (Self::display_right(sound) == v) && !displayed {
-                                            strip.cell(|ui| {
-                                                display_sound(
-                                                    ui, id, sound, selected, settings, name,
-                                                );
-                                            });
-                                            displayed = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if !displayed {
-                            strip.cell(|_| {});
-                        }
-                    }
+                    let v = [false, true].into_iter().map(|v| {
+                        contents
+                            .and_then(|r| r.get(col))
+                            .map(|s| s.iter().filter_map(|id| sounds.get(id).map(|s| (id, s))))
+                            .and_then(|mut m| m.find(|(id, s)| Self::display_right(s) == v) )
+                            .map(|(id, _)| *id)
+                    }).collect::<Vec<_>>();
+                    let left = v[0];
+                    let right = v[1];
+                    Self::display_sound_cell_cell(&mut strip, left, sounds, selected, settings, name);
+                    Self::display_sound_cell_cell(&mut strip, right, sounds, selected, settings, name);
+
                 });
         });
     }
@@ -597,27 +652,200 @@ impl IpaApp {
     }
 
     fn pulmonic_consonant_table(&mut self, ui: &mut Ui) {
-        Self::consonant_table(ui, &self.consonants.pulmonic, &mut self.selected, &self.sounds, &mut self.settings, "pulmonic consonants");
+        Self::consonant_table(
+            ui,
+            &self.consonants.pulmonic,
+            &mut self.selected,
+            &self.sounds,
+            &mut self.settings,
+            "pulmonic consonants",
+        );
     }
 
-    fn non_pulmonic_consonant_table (&mut self, ui: &mut Ui) {
-        Self::consonant_table(ui, &self.consonants.non_pulmonic, &mut self.selected, &self.sounds, &mut self.settings, "non-pulmonic consonants");
+    fn non_pulmonic_consonant_table(&mut self, ui: &mut Ui) {
+        Self::consonant_table(
+            ui,
+            &self.consonants.non_pulmonic,
+            &mut self.selected,
+            &self.sounds,
+            &mut self.settings,
+            "non-pulmonic consonants",
+        );
     }
 
-    fn consonant_table(ui: &mut Ui, lookup: &ConsonantLookups, selected: &mut SelectedSounds, sounds: &HashMap<Uuid, Sound>, settings: &mut IpaAppSettings, name : &str) {
+    // let left = vec![
+    //     ("nasal".to_string(), nasal),
+    //     ("plosive".to_string(), plosive),
+    // ];
+    // let right = vec![
+    //     ("fricative/approximant".to_string(), fricative),
+    //     ("lateral approximant".to_string(), lateral_approximant),
+    //     ("implosive".to_string(), implosive),
+    //     ("ejective".to_string(), ejective),
+    //     ("other".to_string(), misc),
+    // ];
+
+    fn display_co_articulated_cell(&mut self, ui: &mut Ui, left: Option<Uuid>, right: Option<Uuid>, label: &str) {
+        let _ = StripBuilder::new(ui)
+            .size(Size::exact(75.))
+            .size(Size::remainder())
+            .horizontal(|mut strip| {
+                strip.cell(|ui| {
+                    Self::display_custom_sound_cell(ui, left, right, &self.sounds, &mut self.selected, &self.settings, "co-articulated");
+                });
+                strip.cell(|ui| {ui.label(label);} );
+            });
+    }
+
+    fn co_articulated_consonant_table(&mut self, ui: &mut Ui) {
+        let name = "co-articulated";
+        Self::display_sound_table_header(ui, &mut self.settings, name);
+        ui.push_id(name, |ui| {
+            ScrollArea::horizontal().show(ui, |ui| {
+                let table = TableBuilder::new(ui)
+                    .id_salt(name)
+                    .striped(true)
+                    .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+                    .columns(Column::auto(), 4);
+                table.body(|mut body| {
+                    body.row(20., |mut row| {
+                        row.col(|ui| {
+                            ui.strong("Nasal");
+                        });
+                        row.col(|ui| {
+                            ui.separator();
+                            ui.strong("Fricative/approximant");
+                        });
+                    });
+
+                    fn g_id(l: &IpaApp, col: usize, cat: usize, index: usize) -> Option<Uuid> {
+                        Some(if col == 0 {
+                            l.consonants.co_articulated.0[cat].1[index]
+                        } else {
+                            l.consonants.co_articulated.1[cat].1[index]
+                        })
+                    }
+
+                    body.row(20., |mut row| {
+                        row.col(|ui| {
+                            self.display_co_articulated_cell(ui, None, g_id(&self, 0,0,0), "labial-alveolar");
+                        });
+                        row.col(|ui| {
+                            ui.separator();
+                            self.display_co_articulated_cell(ui, g_id(&self, 1,0,0), g_id(&self, 1,0,1), "labial-palatal");
+                        });
+                    });
+
+                    body.row(20., |mut row| {
+                        row.col(|ui| {
+                            self.display_co_articulated_cell(ui, None, g_id(&self, 0,0,1), "labial-retroflex");
+                        });
+                        row.col(|ui| {
+                            ui.separator();
+                            self.display_co_articulated_cell(ui, g_id(&self, 1,0,2), g_id(&self, 1,0,3), "labial-velar");
+                        });
+                    });
+
+                    body.row(20., |mut row| {
+                        row.col(|ui| {
+                            self.display_co_articulated_cell(ui, None, g_id(&self, 0,0,2), "labial-velar");
+                        });
+                        row.col(|ui| {
+                            ui.separator();
+                            self.display_co_articulated_cell(ui, g_id(&self, 1,0,4), None, "Sj-sound");
+                        });
+                    });
+
+                    body.row(20., |mut row| {
+                        row.col(|ui| {
+                            ui.strong("Plosive");
+                        });
+                        row.col(|ui| {
+                            ui.separator();
+                            ui.strong("Lateral approximant");
+                        });
+                    });
+
+                    body.row(20., |mut row| {
+                        row.col(|ui| {
+                            self.display_co_articulated_cell(ui, g_id(&self, 0, 1, 0), g_id(&self, 0,1,1),"labial-alveolar");
+                        });
+                        row.col(|ui| {
+                            ui.separator();
+                            self.display_co_articulated_cell(ui, None, g_id(&self, 1,1,0),"velarized alveolar");
+                        });
+                    });
+
+
+                    body.row(20., |mut row| {
+                        row.col(|ui| {
+                            self.display_co_articulated_cell(ui, g_id(&self, 0, 1, 2), g_id(&self, 0,1,3), "labial-retroflex");
+                        });
+                        row.col(|ui| {
+                            ui.separator();
+                            ui.strong("Implosive");
+                        });
+                    });
+
+
+                    body.row(20., |mut row| {
+                        row.col(|ui| {
+                            self.display_co_articulated_cell(ui, g_id(&self, 0, 1, 4), g_id(&self, 0,1,5), "labial-velar");
+                        });
+                        row.col(|ui| {
+                            ui.separator();
+                            self.display_co_articulated_cell(ui, g_id(&self, 1,2,0), g_id(&self, 1,2,1), "labial-velar");
+                        });
+                    });
+
+                    body.row(20., |mut row| {
+                        row.col(|ui| {
+                            self.display_co_articulated_cell(ui, g_id(&self, 0, 1, 6), None, "uvular-epiglottal");
+                        });
+                        row.col(|ui| {
+                            ui.separator();
+                            ui.strong("Ejective");
+                        });
+                    });
+
+                    body.row(20., |mut row| {
+                        row.col(|ui| {
+                            self.display_co_articulated_cell(ui, g_id(&self, 0, 1, 7), None, "labial-uvular");
+                        });
+                        row.col(|ui| {
+                            ui.separator();
+                            self.display_co_articulated_cell(ui,None, g_id(&self, 1,3,0), "labial-alveolar");
+                        });
+                    });
+
+
+                })
+            });
+        });
+    }
+
+    fn consonant_table(
+        ui: &mut Ui,
+        lookup: &ConsonantLookups,
+        selected: &mut SelectedSounds,
+        sounds: &HashMap<Uuid, Sound>,
+        settings: &mut IpaAppSettings,
+        name: &str,
+    ) {
         let cols = if settings.hide_unselected.contains(name) {
             selected
                 .map
                 .iter()
                 .filter_map(|(id, b)| {
                     if *b {
-                       sounds.get(id).and_then(|v| match &v.description {
-                            SoundKind::Consonant(c) =>
-                            if lookup.places.contains(&c.place) {
-                                Some(c.place)
-                            } else{
-                                None
-                            },
+                        sounds.get(id).and_then(|v| match &v.description {
+                            SoundKind::Consonant(c) => {
+                                if lookup.places.contains(&c.place) {
+                                    Some(c.place)
+                                } else {
+                                    None
+                                }
+                            }
                             _ => None,
                         })
                     } else {
@@ -753,19 +981,63 @@ impl SubApp for IpaApp {
                     return;
                 }
                 if ui.button("Clear all!").clicked() {
-                    self.selected.map.iter_mut().for_each(|(_,v)| *v = false );
+                    self.selected.map.iter_mut().for_each(|(_, v)| *v = false);
                     self.selected.changed = true;
                 }
+                ui.checkbox(&mut self.tabs, "As Tabs");
             });
+            if self.tabs {
+                ui.horizontal_wrapped(|ui| {
+                    let name = "Consonants";
+                    if ui.selectable_label(self.table.as_str() == name, name).clicked() {
+                        self.table = name.to_string();
+                    }
+                    let name = "Vowels";
+                    if ui.selectable_label(self.table.as_str() == name, name).clicked() {
+                        self.table = name.to_string();
+                    }
+                    let name = "Co-articulated";
+                    if ui.selectable_label(self.table.as_str() == name, name).clicked() {
+                        self.table = name.to_string();
+                    }
+                    let name = "Non-pulmonic";
+                    if ui.selectable_label(self.table.as_str() == name, name).clicked() {
+                        self.table = name.to_string();
+                    }
+                });
+            }
             ScrollArea::vertical().show(ui, |ui| {
-                ui.heading("Consonants");
-                self.pulmonic_consonant_table(ui);
-                ui.add_space(20.);
-                ui.heading("Vowels");
-                self.vowel_table(ui);
-                ui.add_space(20.);
-                ui.heading("Non-Pulmonic Consonants");
-                self.non_pulmonic_consonant_table(ui);
+                if self.tabs {
+                    match self.table.as_str() {
+                        "Vowels" => {
+                            self.vowel_table(ui);
+                        }
+                        "Consonants" => {
+                            self.pulmonic_consonant_table(ui);
+                        }
+                        "Co-articulated" => {
+                            self.co_articulated_consonant_table(ui);
+                        }
+                        "Non-pulmonic" => {
+                            self.non_pulmonic_consonant_table(ui);
+                        }
+                        _ => {}
+                    }
+                    ui.add_space(20.);
+                } else {
+                    ui.heading("Vowels");
+                    self.vowel_table(ui);
+                    ui.add_space(20.);
+                    ui.heading("Consonants");
+                    self.pulmonic_consonant_table(ui);
+                    ui.add_space(20.);
+                    ui.heading("Co-articulated");
+                    self.co_articulated_consonant_table(ui);
+                    ui.add_space(20.);
+                    ui.heading("Non-pulmonic");
+                    self.non_pulmonic_consonant_table(ui);
+                    ui.add_space(20.);
+                }
             });
         });
         if self.selected.changed {

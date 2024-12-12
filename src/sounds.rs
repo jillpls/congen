@@ -349,6 +349,7 @@ mod vowels {
 pub use consonants::*;
 
 mod consonants {
+    use crate::sounds::Manner::Ejective;
     use crate::sounds::{parse_csv_to_map, Sound, SoundKind};
     use crate::ConGenError::GenericParseError;
     use crate::{ConGenError, ConGenResult};
@@ -360,7 +361,6 @@ mod consonants {
     use std::fmt::{Display, Formatter};
     use std::io;
     use strum_macros::EnumIter;
-    use crate::sounds::Manner::Ejective;
 
     pub fn parse_consonants<R: io::Read>(input: R) -> Vec<Sound> {
         let records = parse_csv_to_map(input);
@@ -470,7 +470,7 @@ mod consonants {
         match (a, b) {
             (true, false) => Some(Ordering::Less),
             (false, true) => Some(Ordering::Greater),
-            _ => None
+            _ => None,
         }
     }
 
@@ -486,13 +486,27 @@ mod consonants {
             _ => (),
         }
 
-        if let Some(o) = contains_order(a, b, Manner::Stop) { return o; }
-        if let Some(o) = contains_order(b, a, Manner::Lateral) { return o; }
-        if let Some(o) = contains_order(a, b, Manner::Affricate) { return o; }
-        if let Some(o) = contains_order(a, b, Manner::Fricative) { return o; }
-        if let Some(o) = contains_order(a, b, Manner::Tenuis) { return o; }
-        if let Some(o) = contains_order(a, b, Manner::Voiced) { return o; }
-        if let Some(o) = contains_order(a, b, Manner::Nasal) { return o; }
+        if let Some(o) = contains_order(a, b, Manner::Stop) {
+            return o;
+        }
+        if let Some(o) = contains_order(b, a, Manner::Lateral) {
+            return o;
+        }
+        if let Some(o) = contains_order(a, b, Manner::Affricate) {
+            return o;
+        }
+        if let Some(o) = contains_order(a, b, Manner::Fricative) {
+            return o;
+        }
+        if let Some(o) = contains_order(a, b, Manner::Tenuis) {
+            return o;
+        }
+        if let Some(o) = contains_order(a, b, Manner::Voiced) {
+            return o;
+        }
+        if let Some(o) = contains_order(a, b, Manner::Nasal) {
+            return o;
+        }
 
         Ordering::Equal
     }
