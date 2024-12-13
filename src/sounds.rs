@@ -1,7 +1,7 @@
 #[derive(Debug, Default, Eq, PartialEq, Clone, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Diphtong {
     pub first: Sound,
-    pub second: Sound
+    pub second: Sound,
 }
 
 #[derive(Debug, Default, Eq, PartialEq, Clone, Hash, Ord, Serialize, Deserialize)]
@@ -67,7 +67,11 @@ impl Sound {
                 format!("custom sound ({})", self.representation)
             }
             SoundKind::Diphtong(d) => {
-                format!("diphtong: {} + {}", d.first.description_str(), d.second.description_str())
+                format!(
+                    "diphtong: {} + {}",
+                    d.first.description_str(),
+                    d.second.description_str()
+                )
             }
         }
     }

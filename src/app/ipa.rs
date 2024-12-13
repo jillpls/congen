@@ -1,6 +1,8 @@
 use crate::app::{extract_sound_by_representation, SharedData};
 use crate::app::{Categories, SubApp};
-use crate::sounds::{cmp_non_pulmonic, parse_consonants, Consonant, Manner, Place, Sound, SoundKind, Diphtong};
+use crate::sounds::{
+    cmp_non_pulmonic, parse_consonants, Consonant, Diphtong, Manner, Place, Sound, SoundKind,
+};
 use crate::sounds::{
     parse_vowels, partial_cmp_manners, Backness, Height, Manners, Roundedness, Voice,
 };
@@ -11,7 +13,6 @@ use egui_extras::{Column, Size, StripBuilder};
 use egui_extras::{Strip, TableBuilder};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use std::arch::x86_64::__cpuid;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::Hash;
@@ -54,7 +55,7 @@ impl SelectedSounds {
     }
 
     fn deselect_in_place(&mut self) {
-        self.map.iter_mut().for_each(|(_,b)| *b = false);
+        self.map.iter_mut().for_each(|(_, b)| *b = false);
     }
 
     pub fn only_last_changed(&mut self) {
@@ -109,7 +110,7 @@ pub struct IpaApp {
     vowel_lookups: VowelLookups,
     settings: IpaAppSettings,
     table: String,
-    tabs: bool
+    tabs: bool,
 }
 
 impl Default for IpaApp {
@@ -123,7 +124,7 @@ impl Default for IpaApp {
             vowel_lookups: Default::default(),
             settings: Default::default(),
             table: "Consonants".to_string(),
-            tabs: true
+            tabs: true,
         }
     }
 }
@@ -143,7 +144,6 @@ fn filter_deref_vec<'a, F: FnMut(&(&Uuid, &Sound)) -> bool>(
 pub struct IpaAppSettings {
     lock_all_tables: bool,
     locked_tables: HashSet<String>,
-    editing_tables: HashSet<String>,
     hide_unselected: HashSet<String>,
 }
 
@@ -225,7 +225,14 @@ impl IpaApp {
         let implosives = ("I", implosives);
         let non_pulmonic = ("Q", non_pulmonic);
         let diphtongs = ("D", self.diphtongs.iter().copied().collect());
-        let vowel_diphtongs = ("A", vowels.iter().chain(self.diphtongs.iter()).copied().collect::<_>());
+        let vowel_diphtongs = (
+            "A",
+            vowels
+                .iter()
+                .chain(self.diphtongs.iter())
+                .copied()
+                .collect::<_>(),
+        );
         let vowels = ("V", vowels);
         let list = vec![
             vowels,
@@ -257,7 +264,6 @@ impl IpaApp {
                 }
             })
             .collect();
-
     }
 
     fn import_co_articulated(&mut self) -> (Vec<(String, Vec<Uuid>)>, Vec<(String, Vec<Uuid>)>) {
@@ -503,7 +509,7 @@ impl IpaApp {
                 }
             }
             SoundKind::Custom => false,
-            SoundKind::Diphtong(_) => todo!()
+            SoundKind::Diphtong(_) => todo!(),
         }
     }
 
@@ -519,11 +525,16 @@ impl IpaApp {
         }
     }
 
-    fn display_sound_cell_cell(strip: &mut Strip, id: Option<Uuid>, sounds: &HashMap<Uuid, Sound>, selected : &mut SelectedSounds, settings: &IpaAppSettings, name: &str) {
+    fn display_sound_cell_cell(
+        strip: &mut Strip,
+        id: Option<Uuid>,
+        sounds: &HashMap<Uuid, Sound>,
+        selected: &mut SelectedSounds,
+        settings: &IpaAppSettings,
+        name: &str,
+    ) {
         strip.cell(|ui| {
-            if let Some((id, sound)) =
-                id.and_then(|id| sounds.get(&id).map(|s| (id, s)))
-            {
+            if let Some((id, sound)) = id.and_then(|id| sounds.get(&id).map(|s| (id, s))) {
                 display_sound(ui, &id, sound, selected, settings, name);
             }
         });
@@ -543,8 +554,12 @@ impl IpaApp {
                 .size(Size::exact(30.))
                 .size(Size::exact(30.))
                 .horizontal(|mut strip| {
-                    Self::display_sound_cell_cell(&mut strip, left, sounds, selected, settings, name);
-                    Self::display_sound_cell_cell(&mut strip, right, sounds, selected, settings, name);
+                    Self::display_sound_cell_cell(
+                        &mut strip, left, sounds, selected, settings, name,
+                    );
+                    Self::display_sound_cell_cell(
+                        &mut strip, right, sounds, selected, settings, name,
+                    );
                 });
         });
     }
@@ -568,19 +583,23 @@ impl IpaApp {
                         contents
                             .and_then(|r| r.get(col))
                             .map(|s| s.iter().filter_map(|id| sounds.get(id).map(|s| (id, s))))
-                            .and_then(|mut m| m.find(|(id, s)| Self::display_right(s) == v) )
+                            .and_then(|mut m| m.find(|(id, s)| Self::display_right(s) == v))
                             .map(|(id, _)| *id)
                     });
-                    let v= if let Some(f) = additional_filter {
-                        iter.map(|o| o.and_then(|id| if f.contains(&id) { Some(id) } else { None })).collect::<Vec<_>>()
+                    let v = if let Some(f) = additional_filter {
+                        iter.map(|o| o.and_then(|id| if f.contains(&id) { Some(id) } else { None }))
+                            .collect::<Vec<_>>()
                     } else {
                         iter.collect::<Vec<_>>()
                     };
                     let left = v[0];
                     let right = v[1];
-                    Self::display_sound_cell_cell(&mut strip, left, sounds, selected, settings, name);
-                    Self::display_sound_cell_cell(&mut strip, right, sounds, selected, settings, name);
-
+                    Self::display_sound_cell_cell(
+                        &mut strip, left, sounds, selected, settings, name,
+                    );
+                    Self::display_sound_cell_cell(
+                        &mut strip, right, sounds, selected, settings, name,
+                    );
                 });
         });
     }
@@ -611,7 +630,7 @@ impl IpaApp {
                     col,
                     settings,
                     name,
-                    additional_filter
+                    additional_filter,
                 );
                 if i == cols.len() - 1 {
                     ui.separator();
@@ -638,7 +657,6 @@ impl IpaApp {
     fn display_sound_table_header(ui: &mut Ui, settings: &mut IpaAppSettings, name: &str) {
         ui.horizontal_wrapped(|ui| {
             Self::toggle_table_modifier(ui, &mut settings.locked_tables, name, "Lock Table");
-            Self::toggle_table_modifier(ui, &mut settings.editing_tables, name, "Edit Table");
             Self::toggle_table_modifier(ui, &mut settings.hide_unselected, name, "Hide Unselected");
         });
     }
@@ -682,7 +700,7 @@ impl IpaApp {
                                         n,
                                         settings,
                                         name,
-                                        additional_filter
+                                        additional_filter,
                                     )
                                 });
                             }
@@ -726,15 +744,31 @@ impl IpaApp {
     //     ("other".to_string(), misc),
     // ];
 
-    fn display_co_articulated_cell(&mut self, ui: &mut Ui, left: Option<Uuid>, right: Option<Uuid>, label: &str) {
+    fn display_co_articulated_cell(
+        &mut self,
+        ui: &mut Ui,
+        left: Option<Uuid>,
+        right: Option<Uuid>,
+        label: &str,
+    ) {
         let _ = StripBuilder::new(ui)
             .size(Size::exact(75.))
             .size(Size::remainder())
             .horizontal(|mut strip| {
                 strip.cell(|ui| {
-                    Self::display_custom_sound_cell(ui, left, right, &self.sounds, &mut self.selected, &self.settings, "co-articulated");
+                    Self::display_custom_sound_cell(
+                        ui,
+                        left,
+                        right,
+                        &self.sounds,
+                        &mut self.selected,
+                        &self.settings,
+                        "co-articulated",
+                    );
                 });
-                strip.cell(|ui| {ui.label(label);} );
+                strip.cell(|ui| {
+                    ui.label(label);
+                });
             });
     }
 
@@ -769,31 +803,61 @@ impl IpaApp {
 
                     body.row(20., |mut row| {
                         row.col(|ui| {
-                            self.display_co_articulated_cell(ui, None, g_id(&self, 0,0,0), "labial-alveolar");
+                            self.display_co_articulated_cell(
+                                ui,
+                                None,
+                                g_id(&self, 0, 0, 0),
+                                "labial-alveolar",
+                            );
                         });
                         row.col(|ui| {
                             ui.separator();
-                            self.display_co_articulated_cell(ui, g_id(&self, 1,0,0), g_id(&self, 1,0,1), "labial-palatal");
+                            self.display_co_articulated_cell(
+                                ui,
+                                g_id(&self, 1, 0, 0),
+                                g_id(&self, 1, 0, 1),
+                                "labial-palatal",
+                            );
                         });
                     });
 
                     body.row(20., |mut row| {
                         row.col(|ui| {
-                            self.display_co_articulated_cell(ui, None, g_id(&self, 0,0,1), "labial-retroflex");
+                            self.display_co_articulated_cell(
+                                ui,
+                                None,
+                                g_id(&self, 0, 0, 1),
+                                "labial-retroflex",
+                            );
                         });
                         row.col(|ui| {
                             ui.separator();
-                            self.display_co_articulated_cell(ui, g_id(&self, 1,0,2), g_id(&self, 1,0,3), "labial-velar");
+                            self.display_co_articulated_cell(
+                                ui,
+                                g_id(&self, 1, 0, 2),
+                                g_id(&self, 1, 0, 3),
+                                "labial-velar",
+                            );
                         });
                     });
 
                     body.row(20., |mut row| {
                         row.col(|ui| {
-                            self.display_co_articulated_cell(ui, None, g_id(&self, 0,0,2), "labial-velar");
+                            self.display_co_articulated_cell(
+                                ui,
+                                None,
+                                g_id(&self, 0, 0, 2),
+                                "labial-velar",
+                            );
                         });
                         row.col(|ui| {
                             ui.separator();
-                            self.display_co_articulated_cell(ui, g_id(&self, 1,0,4), None, "Sj-sound");
+                            self.display_co_articulated_cell(
+                                ui,
+                                g_id(&self, 1, 0, 4),
+                                None,
+                                "Sj-sound",
+                            );
                         });
                     });
 
@@ -809,18 +873,32 @@ impl IpaApp {
 
                     body.row(20., |mut row| {
                         row.col(|ui| {
-                            self.display_co_articulated_cell(ui, g_id(&self, 0, 1, 0), g_id(&self, 0,1,1),"labial-alveolar");
+                            self.display_co_articulated_cell(
+                                ui,
+                                g_id(&self, 0, 1, 0),
+                                g_id(&self, 0, 1, 1),
+                                "labial-alveolar",
+                            );
                         });
                         row.col(|ui| {
                             ui.separator();
-                            self.display_co_articulated_cell(ui, None, g_id(&self, 1,1,0),"velarized alveolar");
+                            self.display_co_articulated_cell(
+                                ui,
+                                None,
+                                g_id(&self, 1, 1, 0),
+                                "velarized alveolar",
+                            );
                         });
                     });
 
-
                     body.row(20., |mut row| {
                         row.col(|ui| {
-                            self.display_co_articulated_cell(ui, g_id(&self, 0, 1, 2), g_id(&self, 0,1,3), "labial-retroflex");
+                            self.display_co_articulated_cell(
+                                ui,
+                                g_id(&self, 0, 1, 2),
+                                g_id(&self, 0, 1, 3),
+                                "labial-retroflex",
+                            );
                         });
                         row.col(|ui| {
                             ui.separator();
@@ -828,20 +906,34 @@ impl IpaApp {
                         });
                     });
 
-
                     body.row(20., |mut row| {
                         row.col(|ui| {
-                            self.display_co_articulated_cell(ui, g_id(&self, 0, 1, 4), g_id(&self, 0,1,5), "labial-velar");
+                            self.display_co_articulated_cell(
+                                ui,
+                                g_id(&self, 0, 1, 4),
+                                g_id(&self, 0, 1, 5),
+                                "labial-velar",
+                            );
                         });
                         row.col(|ui| {
                             ui.separator();
-                            self.display_co_articulated_cell(ui, g_id(&self, 1,2,0), g_id(&self, 1,2,1), "labial-velar");
+                            self.display_co_articulated_cell(
+                                ui,
+                                g_id(&self, 1, 2, 0),
+                                g_id(&self, 1, 2, 1),
+                                "labial-velar",
+                            );
                         });
                     });
 
                     body.row(20., |mut row| {
                         row.col(|ui| {
-                            self.display_co_articulated_cell(ui, g_id(&self, 0, 1, 6), None, "uvular-epiglottal");
+                            self.display_co_articulated_cell(
+                                ui,
+                                g_id(&self, 0, 1, 6),
+                                None,
+                                "uvular-epiglottal",
+                            );
                         });
                         row.col(|ui| {
                             ui.separator();
@@ -851,15 +943,23 @@ impl IpaApp {
 
                     body.row(20., |mut row| {
                         row.col(|ui| {
-                            self.display_co_articulated_cell(ui, g_id(&self, 0, 1, 7), None, "labial-uvular");
+                            self.display_co_articulated_cell(
+                                ui,
+                                g_id(&self, 0, 1, 7),
+                                None,
+                                "labial-uvular",
+                            );
                         });
                         row.col(|ui| {
                             ui.separator();
-                            self.display_co_articulated_cell(ui,None, g_id(&self, 1,3,0), "labial-alveolar");
+                            self.display_co_articulated_cell(
+                                ui,
+                                None,
+                                g_id(&self, 1, 3, 0),
+                                "labial-alveolar",
+                            );
                         });
                     });
-
-
                 })
             });
         });
@@ -910,7 +1010,7 @@ impl IpaApp {
             &cols,
             name,
             settings,
-            None
+            None,
         );
     }
 
@@ -946,7 +1046,7 @@ impl IpaApp {
             &cols,
             "vowels",
             &mut self.settings,
-            None
+            None,
         );
     }
 
@@ -982,24 +1082,45 @@ impl IpaApp {
             &cols,
             "diphtongs",
             &mut self.settings,
-            Some(&self.selected.map.iter().filter_map(|(id, b)| if *b { Some(*id)} else { None }).collect::<HashSet<_>>())
+            Some(
+                &self
+                    .selected
+                    .map
+                    .iter()
+                    .filter_map(|(id, b)| if *b { Some(*id) } else { None })
+                    .collect::<HashSet<_>>(),
+            ),
         );
         if self.selected_diphtongs.changed {
             self.selected_diphtongs.only_last_changed();
         }
         ui.horizontal(|ui| {
-            ui.label(format!("Currently selected: {}{}",
-                             self.selected_diphtongs.last_changed.get(0).and_then(|id|
-                             self.sounds.get(id)).map(|s| s.display(false).to_string()).unwrap_or_default(),
-                             self.selected_diphtongs.last_changed.get(1).and_then(|id|
-                             self.sounds.get(id)).map(|s| s.display(false).to_string()).unwrap_or_default(),
+            ui.label(format!(
+                "Currently selected: {}{}",
+                self.selected_diphtongs
+                    .last_changed
+                    .get(0)
+                    .and_then(|id| self.sounds.get(id))
+                    .map(|s| s.display(false).to_string())
+                    .unwrap_or_default(),
+                self.selected_diphtongs
+                    .last_changed
+                    .get(1)
+                    .and_then(|id| self.sounds.get(id))
+                    .map(|s| s.display(false).to_string())
+                    .unwrap_or_default(),
             ));
 
             if ui.button("Add").clicked() && self.selected_diphtongs.last_changed.len() >= 2 {
-                if let Some((s1, s2)) = self.sounds.get(&self.selected_diphtongs.last_changed[0])
+                if let Some((s1, s2)) = self
+                    .sounds
+                    .get(&self.selected_diphtongs.last_changed[0])
                     .and_then(|s| {
-                        self.sounds.get(&self.selected_diphtongs.last_changed[1]).map(|s2| (s.clone(), s2.clone()))
-                    }) {
+                        self.sounds
+                            .get(&self.selected_diphtongs.last_changed[1])
+                            .map(|s2| (s.clone(), s2.clone()))
+                    })
+                {
                     let id = Uuid::new_v4();
                     self.sounds.insert(id, Sound::diphtong(s1, s2));
                     self.diphtongs.insert(id);
@@ -1010,7 +1131,10 @@ impl IpaApp {
         });
         ui.horizontal(|ui| {
             let mut iter = self.diphtongs.clone();
-            for (id, d) in iter.into_iter().filter_map(|id| self.sounds.get(&id).map(|s| (id, s))) {
+            for (id, d) in iter
+                .into_iter()
+                .filter_map(|id| self.sounds.get(&id).map(|s| (id, s)))
+            {
                 ui.vertical(|ui| {
                     ui.label(format!("{}", d.display(false)));
                     if ui.button("x").clicked() {
@@ -1025,7 +1149,6 @@ impl IpaApp {
         for (name, cat) in &shared_data.categories {
             Self::display_category(ui, name, cat);
         }
-
     }
 
     fn display_category(ui: &mut Ui, cat_name: &str, contents: &[(Uuid, Sound)]) {
@@ -1033,9 +1156,11 @@ impl IpaApp {
             let prev_spacing = ui.spacing().item_spacing;
             ui.spacing_mut().item_spacing = Vec2::new(0., 0.);
             ui.label(&format!("{}=", cat_name));
-            let c = contents.iter().map(|(_,s)| {
-                s.representation()
-            }).collect::<Vec<_>>().join( ",");
+            let c = contents
+                .iter()
+                .map(|(_, s)| s.representation())
+                .collect::<Vec<_>>()
+                .join(",");
             ui.label(c);
             ui.spacing_mut().item_spacing = prev_spacing;
         });
@@ -1107,23 +1232,38 @@ impl SubApp for IpaApp {
             if self.tabs {
                 ui.horizontal_wrapped(|ui| {
                     let name = "Consonants";
-                    if ui.selectable_label(self.table.as_str() == name, name).clicked() {
+                    if ui
+                        .selectable_label(self.table.as_str() == name, name)
+                        .clicked()
+                    {
                         self.table = name.to_string();
                     }
                     let name = "Vowels";
-                    if ui.selectable_label(self.table.as_str() == name, name).clicked() {
+                    if ui
+                        .selectable_label(self.table.as_str() == name, name)
+                        .clicked()
+                    {
                         self.table = name.to_string();
                     }
                     let name = "Co-articulated";
-                    if ui.selectable_label(self.table.as_str() == name, name).clicked() {
+                    if ui
+                        .selectable_label(self.table.as_str() == name, name)
+                        .clicked()
+                    {
                         self.table = name.to_string();
                     }
                     let name = "Non-pulmonic";
-                    if ui.selectable_label(self.table.as_str() == name, name).clicked() {
+                    if ui
+                        .selectable_label(self.table.as_str() == name, name)
+                        .clicked()
+                    {
                         self.table = name.to_string();
                     }
                     let name = "Diphtongs";
-                    if ui.selectable_label(self.table.as_str() == name, name).clicked() {
+                    if ui
+                        .selectable_label(self.table.as_str() == name, name)
+                        .clicked()
+                    {
                         self.table = name.to_string();
                     }
                 });
@@ -1196,37 +1336,27 @@ fn display_sound_inner(
     settings: &IpaAppSettings,
     name: &str,
 ) {
-    if !settings.editing_tables.contains(name) {
-        let on_hover = sound.description_str();
-        if selected.is_selected(id) {
+    let on_hover = sound.description_str();
+    if selected.is_selected(id) {
+        if ui
+            .selectable_label(true, sound.representation())
+            .on_hover_text(on_hover)
+            .clicked()
+            && !settings.lock_all_tables
+            && !settings.locked_tables.contains(name)
+        {
+            selected.switch(id);
+        }
+    } else {
+        if !settings.hide_unselected.contains(name) {
             if ui
-                .selectable_label(true, sound.representation())
+                .selectable_label(false, sound.representation())
                 .on_hover_text(on_hover)
                 .clicked()
                 && !settings.lock_all_tables
                 && !settings.locked_tables.contains(name)
             {
                 selected.switch(id);
-            }
-        } else {
-            if !settings.hide_unselected.contains(name) {
-                if ui
-                    .selectable_label(false, sound.representation())
-                    .on_hover_text(on_hover)
-                    .clicked()
-                    && !settings.lock_all_tables
-                    && !settings.locked_tables.contains(name)
-                {
-                    selected.switch(id);
-                }
-            }
-        }
-    } else {
-        let mut editable = sound.representation().to_string();
-        if !settings.hide_unselected.contains(name) || selected.is_selected(id) {
-            let edit = ui.text_edit_singleline(&mut editable);
-            if selected.is_selected(id) {
-                edit.highlight();
             }
         }
     }

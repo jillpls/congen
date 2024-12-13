@@ -50,7 +50,7 @@ impl FileImportExport {
         ui: &mut Ui,
         encode: &T,
     ) {
-        export_data(ctx, ui, self.default_name.as_str(), encode);
+        export_data(ui, self.default_name.as_str(), encode);
     }
 
     #[cfg(not(target_arch = "wasm32"))]

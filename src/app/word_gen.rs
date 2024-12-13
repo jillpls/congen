@@ -397,7 +397,7 @@ impl WordGenApp {
 
     #[cfg(target_arch = "wasm32")]
     fn export_instructions(&mut self, ctx: &egui::Context, ui: &mut Ui) {
-        super::file_handling::export_data(ctx, ui, "generation.json", &self.instruction_data);
+        super::file_handling::export_data(ui, "generation.json", &self.instruction_data);
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -479,7 +479,6 @@ impl SubApp for WordGenApp {
                 ui.label("Word amount:");
                 ui.add(egui::DragValue::new(&mut self.settings.amount));
                 ui.end_row();
-
 
                 ui.horizontal_wrapped(|ui| {
                     ui.label("Sorting: ");
