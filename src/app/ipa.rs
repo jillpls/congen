@@ -1,8 +1,6 @@
 use crate::app::{extract_sound_by_representation, SharedData};
 use crate::app::{Categories, SubApp};
-use crate::sounds::{
-    cmp_non_pulmonic, parse_consonants, Consonant, Manner, Place, Sound, SoundKind,
-};
+use crate::sounds::{cmp_non_pulmonic, parse_consonants, Consonant, Manner, Place, Sound, SoundKind, Diphtong};
 use crate::sounds::{
     parse_vowels, partial_cmp_manners, Backness, Height, Manners, Roundedness, Voice,
 };
@@ -15,7 +13,7 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::arch::x86_64::__cpuid;
 use std::cmp::Ordering;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::Hash;
 use uuid::Uuid;
 
@@ -27,6 +25,7 @@ pub struct IpaSave {
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 struct SelectedSounds {
     map: HashMap<Uuid, bool>,
+    last_changed: VecDeque<Uuid>,
     changed: bool,
 }
 
@@ -38,6 +37,7 @@ impl From<&HashMap<Uuid, Sound>> for SelectedSounds {
             .collect();
         Self {
             map,
+            last_changed: vec![].into(),
             changed: false,
         }
     }
@@ -48,10 +48,30 @@ impl SelectedSounds {
         self.map.get(id).copied().unwrap_or(false)
     }
 
+    pub fn deselected(mut self) -> Self {
+        self.deselect_in_place();
+        self
+    }
+
+    fn deselect_in_place(&mut self) {
+        self.map.iter_mut().for_each(|(_,b)| *b = false);
+    }
+
+    pub fn only_last_changed(&mut self) {
+        self.deselect_in_place();
+        for id in &self.last_changed {
+            self.map.insert(*id, true);
+        }
+    }
+
     pub fn switch(&mut self, id: &Uuid) {
         if let Some(v) = self.map.get_mut(id) {
             *v = !*v;
             self.changed = true;
+            if self.last_changed.len() >= 2 {
+                self.last_changed.pop_front();
+            }
+            self.last_changed.push_back(*id);
         }
     }
 }
@@ -83,6 +103,8 @@ pub struct VowelLookups {
 pub struct IpaApp {
     sounds: HashMap<Uuid, Sound>,
     selected: SelectedSounds,
+    selected_diphtongs: SelectedSounds,
+    diphtongs: HashSet<Uuid>,
     consonants: Consonants,
     vowel_lookups: VowelLookups,
     settings: IpaAppSettings,
@@ -95,6 +117,8 @@ impl Default for IpaApp {
         Self {
             sounds: Default::default(),
             selected: Default::default(),
+            selected_diphtongs: Default::default(),
+            diphtongs: Default::default(),
             consonants: Default::default(),
             vowel_lookups: Default::default(),
             settings: Default::default(),
@@ -200,6 +224,8 @@ impl IpaApp {
         let clicks = ("K", clicks);
         let implosives = ("I", implosives);
         let non_pulmonic = ("Q", non_pulmonic);
+        let diphtongs = ("D", self.diphtongs.iter().copied().collect());
+        let vowel_diphtongs = ("A", vowels.iter().chain(self.diphtongs.iter()).copied().collect::<_>());
         let vowels = ("V", vowels);
         let list = vec![
             vowels,
@@ -213,6 +239,8 @@ impl IpaApp {
             ejectives,
             clicks,
             implosives,
+            vowel_diphtongs,
+            diphtongs,
         ];
         shared_data.categories = list
             .into_iter()
@@ -228,7 +256,8 @@ impl IpaApp {
                     ))
                 }
             })
-            .collect()
+            .collect();
+
     }
 
     fn import_co_articulated(&mut self) -> (Vec<(String, Vec<Uuid>)>, Vec<(String, Vec<Uuid>)>) {
@@ -409,6 +438,7 @@ impl IpaApp {
         let mut result = Self::default();
         result.import_sounds();
         result.selected = SelectedSounds::from(&result.sounds);
+        result.selected_diphtongs = SelectedSounds::from(&result.sounds).deselected();
         shared_data.sounds = result.sounds.clone();
         shared_data.sound_by_representation = extract_sound_by_representation(&shared_data.sounds);
         result.update_categories(shared_data);
@@ -473,6 +503,7 @@ impl IpaApp {
                 }
             }
             SoundKind::Custom => false,
+            SoundKind::Diphtong(_) => todo!()
         }
     }
 
@@ -526,19 +557,25 @@ impl IpaApp {
         col: &C,
         settings: &IpaAppSettings,
         name: &str,
+        additional_filter: Option<&HashSet<Uuid>>,
     ) {
         ui.centered_and_justified(|ui| {
             let _ = StripBuilder::new(ui)
                 .size(Size::exact(30.))
                 .size(Size::exact(30.))
                 .horizontal(|mut strip| {
-                    let v = [false, true].into_iter().map(|v| {
+                    let iter = [false, true].into_iter().map(|v| {
                         contents
                             .and_then(|r| r.get(col))
                             .map(|s| s.iter().filter_map(|id| sounds.get(id).map(|s| (id, s))))
                             .and_then(|mut m| m.find(|(id, s)| Self::display_right(s) == v) )
                             .map(|(id, _)| *id)
-                    }).collect::<Vec<_>>();
+                    });
+                    let v= if let Some(f) = additional_filter {
+                        iter.map(|o| o.and_then(|id| if f.contains(&id) { Some(id) } else { None })).collect::<Vec<_>>()
+                    } else {
+                        iter.collect::<Vec<_>>()
+                    };
                     let left = v[0];
                     let right = v[1];
                     Self::display_sound_cell_cell(&mut strip, left, sounds, selected, settings, name);
@@ -557,6 +594,7 @@ impl IpaApp {
         row_contents: &R,
         settings: &IpaAppSettings,
         name: &str,
+        additional_filter: Option<&HashSet<Uuid>>,
     ) {
         let contents = lookup.get(row_contents);
         row.col(|ui| {
@@ -573,6 +611,7 @@ impl IpaApp {
                     col,
                     settings,
                     name,
+                    additional_filter
                 );
                 if i == cols.len() - 1 {
                     ui.separator();
@@ -614,6 +653,7 @@ impl IpaApp {
         cols: &[C],
         name: &str,
         settings: &mut IpaAppSettings,
+        additional_filter: Option<&HashSet<Uuid>>,
     ) {
         Self::display_sound_table_header(ui, settings, name);
         ui.push_id(name, |ui| {
@@ -642,6 +682,7 @@ impl IpaApp {
                                         n,
                                         settings,
                                         name,
+                                        additional_filter
                                     )
                                 });
                             }
@@ -869,6 +910,7 @@ impl IpaApp {
             &cols,
             name,
             settings,
+            None
         );
     }
 
@@ -904,13 +946,86 @@ impl IpaApp {
             &cols,
             "vowels",
             &mut self.settings,
+            None
         );
+    }
+
+    fn diphtong_table(&mut self, ui: &mut Ui, shared_data: &mut SharedData) {
+        let cols = if self.settings.hide_unselected.contains("dipthongs") {
+            self.selected
+                .map
+                .iter()
+                .filter_map(|(id, b)| {
+                    if *b {
+                        self.sounds.get(id).and_then(|v| match &v.description {
+                            SoundKind::Vowel(v) => Some(v.backness),
+                            _ => None,
+                        })
+                    } else {
+                        None
+                    }
+                })
+                .collect::<HashSet<_>>()
+                .into_iter()
+                .sorted()
+                .collect::<Vec<_>>()
+        } else {
+            self.vowel_lookups.backness.clone()
+        };
+        Self::display_sound_table(
+            ui,
+            &self.vowel_lookups.by_height,
+            &mut self.selected_diphtongs,
+            &self.sounds,
+            &self.vowel_lookups.sorted_height,
+            &self.vowel_lookups.empty_rows,
+            &cols,
+            "diphtongs",
+            &mut self.settings,
+            Some(&self.selected.map.iter().filter_map(|(id, b)| if *b { Some(*id)} else { None }).collect::<HashSet<_>>())
+        );
+        if self.selected_diphtongs.changed {
+            self.selected_diphtongs.only_last_changed();
+        }
+        ui.horizontal(|ui| {
+            ui.label(format!("Currently selected: {}{}",
+                             self.selected_diphtongs.last_changed.get(0).and_then(|id|
+                             self.sounds.get(id)).map(|s| s.display(false).to_string()).unwrap_or_default(),
+                             self.selected_diphtongs.last_changed.get(1).and_then(|id|
+                             self.sounds.get(id)).map(|s| s.display(false).to_string()).unwrap_or_default(),
+            ));
+
+            if ui.button("Add").clicked() && self.selected_diphtongs.last_changed.len() >= 2 {
+                if let Some((s1, s2)) = self.sounds.get(&self.selected_diphtongs.last_changed[0])
+                    .and_then(|s| {
+                        self.sounds.get(&self.selected_diphtongs.last_changed[1]).map(|s2| (s.clone(), s2.clone()))
+                    }) {
+                    let id = Uuid::new_v4();
+                    self.sounds.insert(id, Sound::diphtong(s1, s2));
+                    self.diphtongs.insert(id);
+                    self.selected_diphtongs.deselect_in_place();
+                    self.selected_diphtongs.last_changed.clear();
+                }
+            }
+        });
+        ui.horizontal(|ui| {
+            let mut iter = self.diphtongs.clone();
+            for (id, d) in iter.into_iter().filter_map(|id| self.sounds.get(&id).map(|s| (id, s))) {
+                ui.vertical(|ui| {
+                    ui.label(format!("{}", d.display(false)));
+                    if ui.button("x").clicked() {
+                        self.diphtongs.remove(&id);
+                    }
+                });
+            }
+        });
     }
 
     fn categories(&mut self, ui: &mut Ui, shared_data: &SharedData) {
         for (name, cat) in &shared_data.categories {
             Self::display_category(ui, name, cat);
         }
+
     }
 
     fn display_category(ui: &mut Ui, cat_name: &str, contents: &[(Uuid, Sound)]) {
@@ -918,9 +1033,10 @@ impl IpaApp {
             let prev_spacing = ui.spacing().item_spacing;
             ui.spacing_mut().item_spacing = Vec2::new(0., 0.);
             ui.label(&format!("{}=", cat_name));
-            for (_, s) in contents {
-                ui.label(s.representation());
-            }
+            let c = contents.iter().map(|(_,s)| {
+                s.representation()
+            }).collect::<Vec<_>>().join( ",");
+            ui.label(c);
             ui.spacing_mut().item_spacing = prev_spacing;
         });
     }
@@ -981,8 +1097,10 @@ impl SubApp for IpaApp {
                     return;
                 }
                 if ui.button("Clear all!").clicked() {
-                    self.selected.map.iter_mut().for_each(|(_, v)| *v = false);
+                    self.selected.deselect_in_place();
+                    self.selected_diphtongs.deselect_in_place();
                     self.selected.changed = true;
+                    self.diphtongs = HashSet::new();
                 }
                 ui.checkbox(&mut self.tabs, "As Tabs");
             });
@@ -1004,6 +1122,10 @@ impl SubApp for IpaApp {
                     if ui.selectable_label(self.table.as_str() == name, name).clicked() {
                         self.table = name.to_string();
                     }
+                    let name = "Diphtongs";
+                    if ui.selectable_label(self.table.as_str() == name, name).clicked() {
+                        self.table = name.to_string();
+                    }
                 });
             }
             ScrollArea::vertical().show(ui, |ui| {
@@ -1021,6 +1143,9 @@ impl SubApp for IpaApp {
                         "Non-pulmonic" => {
                             self.non_pulmonic_consonant_table(ui);
                         }
+                        "Diphtongs" => {
+                            self.diphtong_table(ui, shared_data);
+                        }
                         _ => {}
                     }
                     ui.add_space(20.);
@@ -1037,10 +1162,13 @@ impl SubApp for IpaApp {
                     ui.heading("Non-pulmonic");
                     self.non_pulmonic_consonant_table(ui);
                     ui.add_space(20.);
+                    ui.heading("Diphtongs");
+                    self.diphtong_table(ui, shared_data);
+                    ui.add_space(20.);
                 }
             });
         });
-        if self.selected.changed {
+        if self.selected.changed || self.selected_diphtongs.changed {
             self.update_empty_rows();
             self.update_categories(shared_data);
         }

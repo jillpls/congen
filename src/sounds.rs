@@ -1,3 +1,9 @@
+#[derive(Debug, Default, Eq, PartialEq, Clone, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct Diphtong {
+    pub first: Sound,
+    pub second: Sound
+}
+
 #[derive(Debug, Default, Eq, PartialEq, Clone, Hash, Ord, Serialize, Deserialize)]
 pub struct Sound {
     pub(crate) representation: String,
@@ -32,6 +38,15 @@ impl std::cmp::PartialOrd for Sound {
 }
 
 impl Sound {
+    pub fn diphtong(first: Sound, second: Sound) -> Self {
+        let complexity = (first.complexity + second.complexity) / 2;
+        Self {
+            representation: format!("{}{}", &first.representation, &second.representation),
+            description: SoundKind::Diphtong(Box::new(Diphtong { first, second })),
+            rewrite: None,
+            complexity,
+        }
+    }
     pub fn is_consonant(&self) -> bool {
         matches!(self.description, SoundKind::Consonant(_))
     }
@@ -50,6 +65,9 @@ impl Sound {
             }
             SoundKind::Custom => {
                 format!("custom sound ({})", self.representation)
+            }
+            SoundKind::Diphtong(d) => {
+                format!("diphtong: {} + {}", d.first.description_str(), d.second.description_str())
             }
         }
     }
@@ -125,6 +143,7 @@ impl Sound {
 #[derive(Default, Debug, Eq, PartialEq, Ord, PartialOrd, Clone, Hash, Serialize, Deserialize)]
 pub enum SoundKind {
     Vowel(Vowel),
+    Diphtong(Box<Diphtong>),
     Consonant(Consonant),
     #[default]
     Custom,

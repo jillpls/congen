@@ -155,7 +155,7 @@ fn categories_to_str(categories: &Vec<(String, Vec<(Uuid, Sound)>)>) -> String {
                 v.iter()
                     .map(|(_, s)| s.representation().to_string())
                     .collect::<Vec<_>>()
-                    .join("")
+                    .join(",")
             )
         })
         .collect::<Vec<_>>()
@@ -177,7 +177,7 @@ fn category_from_str(
     };
     let symbols = if split_whitespace {
         content
-            .split_whitespace()
+            .split(",")
             .map(|v| v.to_string())
             .collect::<Vec<_>>()
     } else {
@@ -480,9 +480,6 @@ impl SubApp for WordGenApp {
                 ui.add(egui::DragValue::new(&mut self.settings.amount));
                 ui.end_row();
 
-                if ui.add(Button::new("Generate Words!")).clicked() {
-                    self.generate_words(shared_data);
-                }
 
                 ui.horizontal_wrapped(|ui| {
                     ui.label("Sorting: ");
@@ -553,12 +550,17 @@ impl SubApp for WordGenApp {
                     };
                 }
                 ui.separator();
-                ui.checkbox(&mut self.settings.word_display.rewrite, "Rewrite Output");
-                if ui.button("Export").clicked() {
-                    if let Some(s) = self.export() {
-                        println!("{}", s);
+                ui.horizontal_wrapped(|ui| {
+                    if ui.add(Button::new("Generate Words!")).clicked() {
+                        self.generate_words(shared_data);
                     }
-                }
+                    ui.checkbox(&mut self.settings.word_display.rewrite, "Rewrite Output");
+                    if ui.button("Export").clicked() {
+                        if let Some(s) = self.export() {
+                            // TODO
+                        }
+                    }
+                });
             });
 
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -666,7 +668,7 @@ impl WordGenApp {
                     &shared_data.sounds,
                     &shared_data.sound_by_representation,
                     &self.instruction_data.base.categories_str,
-                    false,
+                    true,
                 );
             }
         });
@@ -687,7 +689,7 @@ impl WordGenApp {
             &shared_data.sounds,
             &shared_data.sound_by_representation,
             &result.instruction_data.base.categories_str,
-            false,
+            true,
         );
         result
     }
