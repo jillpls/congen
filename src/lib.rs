@@ -15,6 +15,7 @@ use std::num::ParseIntError;
 #[derive(Clone, Debug)]
 pub enum ConGenError {
     GenericParseError(String),
+    TodoExplained(String),
     Todo,
 }
 
@@ -26,6 +27,7 @@ impl std::fmt::Display for ConGenError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             ConGenError::GenericParseError(s) => write!(f, "Failed to parse ({})", s),
+            ConGenError::TodoExplained(s) => write!(f, "{}", s),
             _ => {
                 todo!()
             }

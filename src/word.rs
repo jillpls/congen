@@ -17,6 +17,22 @@ impl PartialOrd for SyllablePart {
 }
 
 impl SyllablePart {
+    pub fn flattened(&self, index: usize, onc_index: OncIndex) -> Vec<(WordIndex, &Sound)> {
+        self.sounds
+            .iter()
+            .enumerate()
+            .map(|(i, s)| {
+                (
+                    WordIndex {
+                        syllable: index,
+                        onc: onc_index,
+                        sound: i,
+                    },
+                    s,
+                )
+            })
+            .collect()
+    }
     pub fn from_sound(sound: Sound) -> Self {
         Self {
             instruction: None,
@@ -42,6 +58,24 @@ pub struct Syllable {
 }
 
 impl Syllable {
+    pub fn flattened(&self, index: usize) -> Vec<(WordIndex, &Sound)> {
+        let onset = self
+            .onset
+            .as_ref()
+            .map(|p| p.flattened(index, OncIndex::Onset))
+            .unwrap_or(vec![]);
+        let nucleus = self.nucleus.flattened(index, OncIndex::Nucleus);
+        let coda = self
+            .onset
+            .as_ref()
+            .map(|p| p.flattened(index, OncIndex::Coda))
+            .unwrap_or(vec![]);
+        onset
+            .into_iter()
+            .chain(nucleus.into_iter())
+            .chain(coda.into_iter())
+            .collect()
+    }
     pub(crate) fn from_part(syllable_part: SyllablePart) -> Self {
         Self {
             instruction: None,
@@ -120,7 +154,29 @@ impl PartialOrd for Word {
     }
 }
 
+#[derive(Copy, Clone)]
+pub enum OncIndex {
+    Onset,
+    Nucleus,
+    Coda,
+}
+
+pub struct WordIndex {
+    syllable: usize,
+    onc: OncIndex,
+    sound: usize,
+}
+
 impl Word {
+    pub fn flattened(&self) -> Vec<(WordIndex, &Sound)> {
+        self.syllables
+            .iter()
+            .enumerate()
+            .map(|(i, s)| s.flattened(i))
+            .flatten()
+            .collect()
+    }
+
     pub fn export(&self) -> Vec<String> {
         vec![
             self.display(false),

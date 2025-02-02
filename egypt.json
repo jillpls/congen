@@ -1,11 +1,19 @@
 {
   "is_advanced": true,
   "base": {
-    "categories_str": "V=aeiuə\nC=bcfghjklmnpqsvwzçɟɾʀʃχ\nP=bcgkpqɟ\nN=mn\nF=fsvzçʃχ\nH=h\nR=jlwɾʀ",
-    "words_str": "AA3",
-    "rewrites_str": "ç|ch\nʃ|sh\nχ|x",
+    "categories_str": "V=a,e,i,o,u,ə\nC=b,c,d,f,g,h,j,k,l,m,n,p,q,r,s,t,w,z,ç,ħ,ɟ,ʃ,ʕ,χ\nP=b,c,d,g,k,p,q,t,ɟ\nN=m,n\nF=f,s,w,z,ç,ʃ,χ\nH=h,ħ,ʕ\nR=j,l,r\nA=a,e,i,o,u,ə",
+    "words_str": "(V)(A3)S(A)",
+    "rewrites_str": "c|tt\nɟ|dd\nç|ch\nʃ|sh\nʕ|hh\nχ|x",
     "rewrite_rules": {
       "rules": [
+        {
+          "from": "c",
+          "to": "tt"
+        },
+        {
+          "from": "ɟ",
+          "to": "dd"
+        },
         {
           "from": "ç",
           "to": "ch"
@@ -13,6 +21,10 @@
         {
           "from": "ʃ",
           "to": "sh"
+        },
+        {
+          "from": "ʕ",
+          "to": "hh"
         },
         {
           "from": "χ",
@@ -25,7 +37,7 @@
         "V",
         [
           [
-            "622092f2-3824-48f0-b28e-c0766771c6e2",
+            "5d57320c-ef92-44dc-a285-3071558f668e",
             {
               "representation": "a",
               "description": {
@@ -40,7 +52,7 @@
             }
           ],
           [
-            "85471ca2-083c-4821-b71d-c5759c017209",
+            "9e15dcab-b223-49f5-8150-16ccb605f2d9",
             {
               "representation": "e",
               "description": {
@@ -55,7 +67,7 @@
             }
           ],
           [
-            "71257091-5c90-472a-a74c-2166ea7e063d",
+            "18a7fdaf-0b97-45ed-988f-d49aa591217f",
             {
               "representation": "i",
               "description": {
@@ -70,7 +82,22 @@
             }
           ],
           [
-            "082faede-7c71-4c5e-aeb9-2b195731758d",
+            "8f2bf3f9-512a-4ccc-b68e-99464f1f6934",
+            {
+              "representation": "o",
+              "description": {
+                "Vowel": {
+                  "height": "CloseMid",
+                  "backness": "Back",
+                  "roundedness": "Rounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 1
+            }
+          ],
+          [
+            "6cacc465-0f79-4c28-acf3-4e25a3ccf1a6",
             {
               "representation": "u",
               "description": {
@@ -85,7 +112,7 @@
             }
           ],
           [
-            "56422bee-b47a-469c-82a3-5680b0713f9a",
+            "0b6af5b5-438e-4174-9e6b-97b258d61abd",
             {
               "representation": "ə",
               "description": {
@@ -105,11 +132,14 @@
         "C",
         [
           [
-            "7cadcebb-9588-4265-9229-a3e4aa3b0e83",
+            "3e7ccb9e-9720-44ad-b056-b7c048a54b03",
             {
               "representation": "b",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Bilabial",
                   "manners": {
@@ -124,11 +154,14 @@
             }
           ],
           [
-            "028e7708-71f9-4ff6-b5cf-a999384134df",
+            "c9f8e5db-628d-4bb7-a550-485c4419b0a2",
             {
               "representation": "c",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Palatal",
                   "manners": {
@@ -143,11 +176,36 @@
             }
           ],
           [
-            "cceabcc6-40a0-4848-bb7c-dbe4fa389314",
+            "0003079b-e32c-4507-8aea-8f7e5a230034",
+            {
+              "representation": "d",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiced",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "2b40d51e-529b-4b59-9448-49b0a301c626",
             {
               "representation": "f",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Labiodental",
                   "manners": {
@@ -163,11 +221,14 @@
             }
           ],
           [
-            "0157583e-f6bd-454e-8535-563e1ae081a3",
+            "0d3b76ba-3ef1-4703-a1ce-0dc6e65de874",
             {
               "representation": "g",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Velar",
                   "manners": {
@@ -182,11 +243,14 @@
             }
           ],
           [
-            "8227a59b-0de1-4f41-a8e6-f613a86966cf",
+            "b8d71d4a-7af3-452a-a0e7-5cce9e4bbce8",
             {
               "representation": "h",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Glottal",
                   "manners": {
@@ -202,11 +266,14 @@
             }
           ],
           [
-            "ac231d03-784d-4a40-9980-040f36ba340b",
+            "15ea7761-28ba-45ee-9afc-7ffbdbca6ccb",
             {
               "representation": "j",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Palatal",
                   "manners": {
@@ -221,11 +288,14 @@
             }
           ],
           [
-            "93bac2ae-12df-4754-ab86-a28349f35e55",
+            "8169dd75-fc7a-40e7-ae81-c81584d5c856",
             {
               "representation": "k",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Velar",
                   "manners": {
@@ -240,11 +310,14 @@
             }
           ],
           [
-            "6d9813fb-76ac-4aeb-af2c-14d29a41c2a5",
+            "5ebeba6a-87a3-461c-a093-5cfbb4853fc1",
             {
               "representation": "l",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Alveolar",
                   "manners": {
@@ -260,11 +333,14 @@
             }
           ],
           [
-            "6793dd3b-cf68-4e1a-b176-dbb35b1025b3",
+            "cfe0f867-3515-4439-aade-b6880ba8943e",
             {
               "representation": "m",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Bilabial",
                   "manners": {
@@ -279,11 +355,14 @@
             }
           ],
           [
-            "eddf5f23-01e8-4b62-926b-1b5ca4e012fc",
+            "e2978057-1ba9-4d2a-89ce-e7768fb0741b",
             {
               "representation": "n",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Alveolar",
                   "manners": {
@@ -298,11 +377,14 @@
             }
           ],
           [
-            "c89a88f0-5a4a-4c14-b168-bbc6f25e92a6",
+            "3d785d25-7a32-4c31-94d7-246af7f2c405",
             {
               "representation": "p",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Bilabial",
                   "manners": {
@@ -317,11 +399,14 @@
             }
           ],
           [
-            "c6230c2f-ec33-4001-bf27-a5ce6d120412",
+            "b3c156d5-7b3a-48a5-9cbb-88075ffd02ae",
             {
               "representation": "q",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Uvular",
                   "manners": {
@@ -336,150 +421,16 @@
             }
           ],
           [
-            "448fda8b-ca7b-4076-9593-139de3143027",
+            "2ccfb606-ccc4-4d3f-92dc-9573276ea3ca",
             {
-              "representation": "s",
+              "representation": "r",
               "description": {
                 "Consonant": {
-                  "voice": "Voiceless",
-                  "place": "Alveolar",
-                  "manners": {
-                    "inner": [
-                      "Sibilant",
-                      "Fricative"
-                    ]
-                  }
-                }
-              },
-              "rewrite": null,
-              "complexity": 0
-            }
-          ],
-          [
-            "27089303-cc8e-4d30-9009-476c257a0bb4",
-            {
-              "representation": "v",
-              "description": {
-                "Consonant": {
-                  "voice": "Voiced",
-                  "place": "Labiodental",
-                  "manners": {
-                    "inner": [
-                      "NonSibilant",
-                      "Fricative"
-                    ]
-                  }
-                }
-              },
-              "rewrite": null,
-              "complexity": 0
-            }
-          ],
-          [
-            "aa45fb15-ae0a-4063-8c9e-28ad0b89fbcb",
-            {
-              "representation": "w",
-              "description": {
-                "Consonant": {
-                  "voice": "Voiced",
-                  "place": "LabialVelar",
-                  "manners": {
-                    "inner": [
-                      "Approximant"
-                    ]
-                  }
-                }
-              },
-              "rewrite": null,
-              "complexity": 10
-            }
-          ],
-          [
-            "ab7e86d4-831d-4211-85b4-03e537985b14",
-            {
-              "representation": "z",
-              "description": {
-                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Alveolar",
-                  "manners": {
-                    "inner": [
-                      "Sibilant",
-                      "Fricative"
-                    ]
-                  }
-                }
-              },
-              "rewrite": null,
-              "complexity": 0
-            }
-          ],
-          [
-            "dc3f12e0-79c1-4e1e-a196-9b73caae8095",
-            {
-              "representation": "ç",
-              "description": {
-                "Consonant": {
-                  "voice": "Voiceless",
-                  "place": "Palatal",
-                  "manners": {
-                    "inner": [
-                      "NonSibilant",
-                      "Fricative"
-                    ]
-                  }
-                }
-              },
-              "rewrite": null,
-              "complexity": 10
-            }
-          ],
-          [
-            "e0b8a2d6-d431-42cb-ad06-09f5fa210827",
-            {
-              "representation": "ɟ",
-              "description": {
-                "Consonant": {
-                  "voice": "Voiced",
-                  "place": "Palatal",
-                  "manners": {
-                    "inner": [
-                      "Plosive"
-                    ]
-                  }
-                }
-              },
-              "rewrite": null,
-              "complexity": 10
-            }
-          ],
-          [
-            "251e5294-8afe-4070-9a2a-ebb4e12c6dbc",
-            {
-              "representation": "ɾ",
-              "description": {
-                "Consonant": {
-                  "voice": "Voiced",
-                  "place": "Alveolar",
-                  "manners": {
-                    "inner": [
-                      "TapFlap"
-                    ]
-                  }
-                }
-              },
-              "rewrite": null,
-              "complexity": 2
-            }
-          ],
-          [
-            "ba575b21-f74e-467c-8960-c31851a3800d",
-            {
-              "representation": "ʀ",
-              "description": {
-                "Consonant": {
-                  "voice": "Voiced",
-                  "place": "Uvular",
                   "manners": {
                     "inner": [
                       "Trill"
@@ -492,11 +443,172 @@
             }
           ],
           [
-            "7c86210e-cbc0-4322-b1ea-264a1d36c692",
+            "d31a0331-5c9e-4d0b-a049-4ddbd750efed",
+            {
+              "representation": "s",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiceless",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Sibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "ee59224f-85eb-4362-aa26-5c5bf6ae9a57",
+            {
+              "representation": "t",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiceless",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "850872ac-f415-4b16-8cb2-4931afafee60",
+            {
+              "representation": "w",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": true,
+                  "uvular": false,
+                  "voice": "Voiced",
+                  "place": "LabialVelar",
+                  "manners": {
+                    "inner": [
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 1
+            }
+          ],
+          [
+            "82f28eae-e0ec-445f-b91e-4b6273c11207",
+            {
+              "representation": "z",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiced",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Sibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "2faf0b6b-a9d2-48d3-b4f2-700fdb14aaa0",
+            {
+              "representation": "ç",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiceless",
+                  "place": "Palatal",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "f12c07ec-613d-4b99-91f4-4c5d91719b77",
+            {
+              "representation": "ħ",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiceless",
+                  "place": "PharyngealEppiglotal",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "dc300349-34bf-419e-bebc-2ea6a7fbc4c8",
+            {
+              "representation": "ɟ",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiced",
+                  "place": "Palatal",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "3d5db209-599b-4cd8-8257-fcae809a02b4",
             {
               "representation": "ʃ",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Postalveolar",
                   "manners": {
@@ -512,11 +624,37 @@
             }
           ],
           [
-            "1c5a5dda-f69d-42c0-9f5d-545a37ae4dfa",
+            "e0e15989-6136-4ffe-8616-c4d48c118bdf",
+            {
+              "representation": "ʕ",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiced",
+                  "place": "PharyngealEppiglotal",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "1fb3011a-6852-41fe-9e40-c00caac89a45",
             {
               "representation": "χ",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Uvular",
                   "manners": {
@@ -537,11 +675,14 @@
         "P",
         [
           [
-            "7cadcebb-9588-4265-9229-a3e4aa3b0e83",
+            "3e7ccb9e-9720-44ad-b056-b7c048a54b03",
             {
               "representation": "b",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Bilabial",
                   "manners": {
@@ -556,11 +697,14 @@
             }
           ],
           [
-            "028e7708-71f9-4ff6-b5cf-a999384134df",
+            "c9f8e5db-628d-4bb7-a550-485c4419b0a2",
             {
               "representation": "c",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Palatal",
                   "manners": {
@@ -575,11 +719,36 @@
             }
           ],
           [
-            "0157583e-f6bd-454e-8535-563e1ae081a3",
+            "0003079b-e32c-4507-8aea-8f7e5a230034",
+            {
+              "representation": "d",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiced",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "0d3b76ba-3ef1-4703-a1ce-0dc6e65de874",
             {
               "representation": "g",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Velar",
                   "manners": {
@@ -594,11 +763,14 @@
             }
           ],
           [
-            "93bac2ae-12df-4754-ab86-a28349f35e55",
+            "8169dd75-fc7a-40e7-ae81-c81584d5c856",
             {
               "representation": "k",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Velar",
                   "manners": {
@@ -613,11 +785,14 @@
             }
           ],
           [
-            "c89a88f0-5a4a-4c14-b168-bbc6f25e92a6",
+            "3d785d25-7a32-4c31-94d7-246af7f2c405",
             {
               "representation": "p",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Bilabial",
                   "manners": {
@@ -632,11 +807,14 @@
             }
           ],
           [
-            "c6230c2f-ec33-4001-bf27-a5ce6d120412",
+            "b3c156d5-7b3a-48a5-9cbb-88075ffd02ae",
             {
               "representation": "q",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Uvular",
                   "manners": {
@@ -651,11 +829,36 @@
             }
           ],
           [
-            "e0b8a2d6-d431-42cb-ad06-09f5fa210827",
+            "ee59224f-85eb-4362-aa26-5c5bf6ae9a57",
+            {
+              "representation": "t",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiceless",
+                  "place": "Alveolar",
+                  "manners": {
+                    "inner": [
+                      "Plosive"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "dc300349-34bf-419e-bebc-2ea6a7fbc4c8",
             {
               "representation": "ɟ",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Palatal",
                   "manners": {
@@ -675,11 +878,14 @@
         "N",
         [
           [
-            "6793dd3b-cf68-4e1a-b176-dbb35b1025b3",
+            "cfe0f867-3515-4439-aade-b6880ba8943e",
             {
               "representation": "m",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Bilabial",
                   "manners": {
@@ -694,11 +900,14 @@
             }
           ],
           [
-            "eddf5f23-01e8-4b62-926b-1b5ca4e012fc",
+            "e2978057-1ba9-4d2a-89ce-e7768fb0741b",
             {
               "representation": "n",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Alveolar",
                   "manners": {
@@ -718,11 +927,14 @@
         "F",
         [
           [
-            "cceabcc6-40a0-4848-bb7c-dbe4fa389314",
+            "2b40d51e-529b-4b59-9448-49b0a301c626",
             {
               "representation": "f",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Labiodental",
                   "manners": {
@@ -738,11 +950,14 @@
             }
           ],
           [
-            "448fda8b-ca7b-4076-9593-139de3143027",
+            "d31a0331-5c9e-4d0b-a049-4ddbd750efed",
             {
               "representation": "s",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Alveolar",
                   "manners": {
@@ -758,31 +973,36 @@
             }
           ],
           [
-            "27089303-cc8e-4d30-9009-476c257a0bb4",
+            "850872ac-f415-4b16-8cb2-4931afafee60",
             {
-              "representation": "v",
+              "representation": "w",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": true,
+                  "uvular": false,
                   "voice": "Voiced",
-                  "place": "Labiodental",
+                  "place": "LabialVelar",
                   "manners": {
                     "inner": [
-                      "NonSibilant",
                       "Fricative"
                     ]
                   }
                 }
               },
               "rewrite": null,
-              "complexity": 0
+              "complexity": 1
             }
           ],
           [
-            "ab7e86d4-831d-4211-85b4-03e537985b14",
+            "82f28eae-e0ec-445f-b91e-4b6273c11207",
             {
               "representation": "z",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Alveolar",
                   "manners": {
@@ -798,11 +1018,14 @@
             }
           ],
           [
-            "dc3f12e0-79c1-4e1e-a196-9b73caae8095",
+            "2faf0b6b-a9d2-48d3-b4f2-700fdb14aaa0",
             {
               "representation": "ç",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Palatal",
                   "manners": {
@@ -818,11 +1041,14 @@
             }
           ],
           [
-            "7c86210e-cbc0-4322-b1ea-264a1d36c692",
+            "3d5db209-599b-4cd8-8257-fcae809a02b4",
             {
               "representation": "ʃ",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Postalveolar",
                   "manners": {
@@ -838,11 +1064,14 @@
             }
           ],
           [
-            "1c5a5dda-f69d-42c0-9f5d-545a37ae4dfa",
+            "1fb3011a-6852-41fe-9e40-c00caac89a45",
             {
               "representation": "χ",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Uvular",
                   "manners": {
@@ -863,11 +1092,14 @@
         "H",
         [
           [
-            "8227a59b-0de1-4f41-a8e6-f613a86966cf",
+            "b8d71d4a-7af3-452a-a0e7-5cce9e4bbce8",
             {
               "representation": "h",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiceless",
                   "place": "Glottal",
                   "manners": {
@@ -881,6 +1113,52 @@
               "rewrite": null,
               "complexity": 0
             }
+          ],
+          [
+            "f12c07ec-613d-4b99-91f4-4c5d91719b77",
+            {
+              "representation": "ħ",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiceless",
+                  "place": "PharyngealEppiglotal",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
+          ],
+          [
+            "e0e15989-6136-4ffe-8616-c4d48c118bdf",
+            {
+              "representation": "ʕ",
+              "description": {
+                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
+                  "voice": "Voiced",
+                  "place": "PharyngealEppiglotal",
+                  "manners": {
+                    "inner": [
+                      "NonSibilant",
+                      "Fricative"
+                    ]
+                  }
+                }
+              },
+              "rewrite": null,
+              "complexity": 10
+            }
           ]
         ]
       ],
@@ -888,11 +1166,14 @@
         "R",
         [
           [
-            "ac231d03-784d-4a40-9980-040f36ba340b",
+            "15ea7761-28ba-45ee-9afc-7ffbdbca6ccb",
             {
               "representation": "j",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Palatal",
                   "manners": {
@@ -907,11 +1188,14 @@
             }
           ],
           [
-            "6d9813fb-76ac-4aeb-af2c-14d29a41c2a5",
+            "5ebeba6a-87a3-461c-a093-5cfbb4853fc1",
             {
               "representation": "l",
               "description": {
                 "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Alveolar",
                   "manners": {
@@ -927,51 +1211,16 @@
             }
           ],
           [
-            "aa45fb15-ae0a-4063-8c9e-28ad0b89fbcb",
+            "2ccfb606-ccc4-4d3f-92dc-9573276ea3ca",
             {
-              "representation": "w",
+              "representation": "r",
               "description": {
                 "Consonant": {
-                  "voice": "Voiced",
-                  "place": "LabialVelar",
-                  "manners": {
-                    "inner": [
-                      "Approximant"
-                    ]
-                  }
-                }
-              },
-              "rewrite": null,
-              "complexity": 10
-            }
-          ],
-          [
-            "251e5294-8afe-4070-9a2a-ebb4e12c6dbc",
-            {
-              "representation": "ɾ",
-              "description": {
-                "Consonant": {
+                  "pulmonic": true,
+                  "co_articulated": false,
+                  "uvular": false,
                   "voice": "Voiced",
                   "place": "Alveolar",
-                  "manners": {
-                    "inner": [
-                      "TapFlap"
-                    ]
-                  }
-                }
-              },
-              "rewrite": null,
-              "complexity": 2
-            }
-          ],
-          [
-            "ba575b21-f74e-467c-8960-c31851a3800d",
-            {
-              "representation": "ʀ",
-              "description": {
-                "Consonant": {
-                  "voice": "Voiced",
-                  "place": "Uvular",
                   "manners": {
                     "inner": [
                       "Trill"
@@ -981,6 +1230,101 @@
               },
               "rewrite": null,
               "complexity": 10
+            }
+          ]
+        ]
+      ],
+      [
+        "A",
+        [
+          [
+            "5d57320c-ef92-44dc-a285-3071558f668e",
+            {
+              "representation": "a",
+              "description": {
+                "Vowel": {
+                  "height": "Open",
+                  "backness": "Front",
+                  "roundedness": "Unrounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "9e15dcab-b223-49f5-8150-16ccb605f2d9",
+            {
+              "representation": "e",
+              "description": {
+                "Vowel": {
+                  "height": "CloseMid",
+                  "backness": "Front",
+                  "roundedness": "Unrounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 1
+            }
+          ],
+          [
+            "18a7fdaf-0b97-45ed-988f-d49aa591217f",
+            {
+              "representation": "i",
+              "description": {
+                "Vowel": {
+                  "height": "Close",
+                  "backness": "Front",
+                  "roundedness": "Unrounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "8f2bf3f9-512a-4ccc-b68e-99464f1f6934",
+            {
+              "representation": "o",
+              "description": {
+                "Vowel": {
+                  "height": "CloseMid",
+                  "backness": "Back",
+                  "roundedness": "Rounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 1
+            }
+          ],
+          [
+            "6cacc465-0f79-4c28-acf3-4e25a3ccf1a6",
+            {
+              "representation": "u",
+              "description": {
+                "Vowel": {
+                  "height": "Close",
+                  "backness": "Back",
+                  "roundedness": "Rounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 0
+            }
+          ],
+          [
+            "0b6af5b5-438e-4174-9e6b-97b258d61abd",
+            {
+              "representation": "ə",
+              "description": {
+                "Vowel": {
+                  "height": "Mid",
+                  "backness": "Central",
+                  "roundedness": "Unrounded"
+                }
+              },
+              "rewrite": null,
+              "complexity": 2
             }
           ]
         ]
@@ -994,7 +1338,7 @@
       "added": [
         [
           "O",
-          "(C)"
+          "C"
         ]
       ]
     },
@@ -1003,8 +1347,12 @@
       "value_str": "",
       "added": [
         [
-          "N",
-          "V"
+          "S",
+          "[{[eoui]:}[aeo]]"
+        ],
+        [
+          "U",
+          "[əa]"
         ]
       ]
     },
@@ -1014,7 +1362,7 @@
       "added": [
         [
           "C",
-          "(C)"
+          "(C(C))"
         ]
       ]
     },
@@ -1027,13 +1375,25 @@
         [
           "A",
           "O",
-          "N",
+          "U",
           "C"
+        ],
+        [
+          "S",
+          "O",
+          "S",
+          "C"
+        ],
+        [
+          "V",
+          null,
+          "U",
+          null
         ]
       ]
     }
   },
   "simple": {
-    "syllables_str": "A=(C)V(C)"
+    "syllables_str": "A=DDD"
   }
 }

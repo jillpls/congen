@@ -6,7 +6,7 @@ pub struct WordGenSettings {
     pub(crate) word_display: WordDisplaySettings,
     pub(crate) sorting: Sorting,
     pub(crate) amount: usize,
-    pub(crate) variance: f32,
+    pub(crate) variance: Option<f32>,
 }
 
 impl Default for WordGenSettings {
@@ -15,7 +15,7 @@ impl Default for WordGenSettings {
             word_display: Default::default(),
             sorting: Default::default(),
             amount: 20,
-            variance: 1.0,
+            variance: Some(1.),
         }
     }
 }

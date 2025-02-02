@@ -3,6 +3,7 @@ use crate::app::SharedData;
 use egui::{Button, TextEdit, Ui};
 use serde::{Deserialize, Serialize};
 
+use crate::app::word_gen::instructions::{display_category, display_editable_category};
 pub use syllables_input::*;
 
 mod syllables_input {
@@ -65,7 +66,20 @@ impl Default for AdvancedAppPart {
 
 impl WordGenApp {
     pub(crate) fn advanced_input(&mut self, ui: &mut Ui, shared_data: &SharedData) {
-        self.categories(ui, shared_data);
+        if let Some(cat) = &mut self.instruction_data.base.categories {
+            for (idx, c) in cat.iter_mut().enumerate() {
+                if self.instruction_data.base.to_edit == Some(idx) {
+                    if display_editable_category(ui, c) {
+                        self.instruction_data.base.to_edit = None;
+                    }
+                } else {
+                    if display_category(ui, c) {
+                        self.instruction_data.base.to_edit = Some(idx);
+                    }
+                }
+            }
+        }
+        // self.categories(ui, shared_data);
         ui.horizontal_wrapped(|ui| {
             ui.vertical(|ui| {
                 ui.label("Onset");

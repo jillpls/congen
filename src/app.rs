@@ -1,5 +1,5 @@
 use crate::app::ipa::{IpaApp, IpaSave};
-use crate::app::sound_change::SoundChangeApp;
+use crate::app::sound_change::{SoundChangeApp, SoundChangeSave};
 use crate::app::word_gen::save::WordGenSave;
 use crate::app::word_gen::WordGenApp;
 use crate::sounds::Sound;
@@ -25,6 +25,7 @@ pub struct Save {
     selected_tab: TabId,
     word_gen_save: WordGenSave,
     ipa_save: IpaSave,
+    sound_change_save: SoundChangeSave,
 }
 
 pub fn extract_sound_by_representation(sounds: &HashMap<Uuid, Sound>) -> HashMap<String, Uuid> {
@@ -95,6 +96,7 @@ impl WrapperApp {
                 result.tab = save.selected_tab;
                 result.word_gen_app = WordGenApp::load(save.word_gen_save);
                 result.ipa_app = save.ipa_save.app;
+                result.sound_change_app = save.sound_change_save.app;
             }
         }
 
@@ -151,6 +153,7 @@ impl App for WrapperApp {
             selected_tab: self.tab,
             word_gen_save: self.word_gen_app.save(),
             ipa_save: self.ipa_app.save(),
+            sound_change_save: self.sound_change_app.save(),
         };
         eframe::set_value(_storage, eframe::APP_KEY, &save)
     }
